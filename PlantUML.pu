@@ -1,0 +1,83 @@
+@startuml
+
+entity User {
+  * id : int
+  * email : string
+  * first_name : string
+  * last_name : string
+  * password : string
+  * profile_picture : string
+  * date_joined : datetime
+  * last_login : datetime
+  * level : int
+}
+
+entity Quest {
+  * id : int
+  * title : string
+  * description : text
+  * location : string
+  * category_id : int
+  * reward_id : int
+  * date_created : datetime
+}
+
+entity QuestCompletion {
+  * id : int
+  * user_id : int
+  * quest_id : int
+  * completion_date : datetime
+  * certificate : string
+}
+
+entity Ticket {
+  * id : int
+  * title : string
+  * description : text
+  * expiration_date : datetime
+}
+
+entity TicketIssuance {
+  * id : int
+  * user_id : int
+  * ticket_id : int
+  * issue_date : datetime
+}
+
+entity Report {
+  * id : int
+  * user_id : int
+  * quests_completed : int
+  * report_date : datetime
+  * content : text
+}
+
+entity Tag {
+  * id : int
+  * name : string
+  * description : text
+  * created_at : datetime
+}
+
+entity Review {
+  * id : int
+  * user_id : int
+  * quest_id : int
+  * rating : int
+  * comment : text
+  * date_created : datetime
+}
+
+User }|..|| QuestCompletion
+Quest }|..|| QuestCompletion
+User }|..|| TicketIssuance
+Ticket }|..|| TicketIssuance
+User }|..|| Report
+User }|..|| Review
+Quest }|..|| Review
+Quest }|..|| QuestCompletion
+Quest ||--o{ Tag : tags
+Quest ||--|| Ticket : reward
+Quest ||--|| Tag : category
+
+@enduml
