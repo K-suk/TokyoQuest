@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <h2>{{ quest.title }}</h2>
+    <p>{{ quest.description }}</p>
+    <p>Location: {{ quest.location }}</p>
+    <p>Reward: {{ quest.reward }}</p>
+
+    <h3>Reviews</h3>
+    <ul>
+        {% for review in reviews %}
+            <li>
+                <strong>{{ review.user.username }}</strong> rated it {{ review.rating }} out of 5
+                <p>{{ review.comment }}</p>
+            </li>
+        {% endfor %}
+    </ul>
+    <a href="{% url 'quests:add_review' quest.id %}">Add Review</a>
+{% endblock %}

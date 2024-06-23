@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <h2>Quests</h2>
+    <form method="get">
+        {{ form.as_p }}
+        <button type="submit">Search</button>
+    </form>
+    <ul>
+        {% for quest in quests %}
+            <li>
+                <a href="{% url 'quests:quest_detail' quest.pk %}">{{ quest.title }}</a>
+                <div>
+                    Tags:
+                    <ul>
+                        {% for tag in quest.tags.all %}
+                            <li>{{ tag.name }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                <a href="{% url 'quests:complete_quest' quest.id %}">Complete Quest</a>
+            </li>
+        {% endfor %}
+    </ul>
+{% endblock %}

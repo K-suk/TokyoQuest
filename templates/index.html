@@ -11,8 +11,13 @@
 {% block content %}
     {% if user.is_authenticated %}
         <div class="h2">Welcome {{ user.first_name }} {{ user.last_name }}</div>
-        <a href="{% url 'accounts:logout' %}" class="btn btn-primary">Logout</a> 
+        <a href="{% url 'quests:quest_list' %}" class="btn btn-primary">Quest_list</a>
+        <a href="{% url 'quests:ticket_list' %}" class="btn btn-primary">Ticket_list</a>
+        <a href="{% url 'accounts:logout' %}" class="btn btn-primary">Logout</a>
+        <a href="{% url 'accounts:password_change' %}" class="btn btn-primary">Change Password</a>
+        <a href="{% url 'accounts:profile' %}" class="btn btn-primary">User Profile</a>
     {% else %}
         <a href="{% url 'accounts:login' %}" class="btn btn-primary">Login</a>
+        <a href="{% url 'accounts:password_reset' %}" class="btn btn-primary">ForgetPassword</a>
     {% endif %}
 {% endblock %}
