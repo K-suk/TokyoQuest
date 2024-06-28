@@ -1,78 +1,138 @@
-from django.shortcuts import redirect, render, get_object_or_404
-
-from accounts.models import User
-from .forms import ReviewForm, TagSearchForm
-from .models import Quest, QuestCompletion, Report, Ticket, TicketIssuance
-from django.contrib.auth.decorators import login_required
-from django.contrib.auth.mixins import LoginRequiredMixin
-from django.views import View
+from rest_framework import viewsets, generics
+from rest_framework.response import Response
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
 from django.utils import timezone
+from django.shortcuts import get_object_or_404
+from accounts.models import User
+from .models import Quest, QuestCompletion, Report, Ticket, TicketIssuance, Review
+from .serializers import QuestSerializer, QuestCompletionSerializer, ReportSerializer, TicketSerializer, TicketIssuanceSerializer, ReviewSerializer
 from apscheduler.schedulers.background import BackgroundScheduler
+import logging
+from rest_framework import status
+from django.db import transaction
 
-class QuestListView(LoginRequiredMixin, View):
-    def get(self, request, *args, **kwargs):
-        form = TagSearchForm(request.GET)
-        completed_quests = QuestCompletion.objects.filter(user=request.user).values_list('quest', flat=True)
-        quests = Quest.objects.exclude(id__in=completed_quests)
-        if form.is_valid():
-            keyword = form.cleaned_data['keyword']
-            if keyword:
-                quests = quests.filter(tags__name__icontains=keyword)
-        return render(request, 'quests/quest_list.html', {'quests': quests, 'form': form})
+logger = logging.getLogger(__name__)
 
+class QuestViewSet(viewsets.ModelViewSet):
+    queryset = Quest.objects.all()
+    serializer_class = QuestSerializer
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_incomplete_quests(request):
+    logger.debug("get_incomplete_quests called")
+    user = request.user
+    completed_quests = QuestCompletion.objects.filter(user=user).values_list('quest_id', flat=True)
+    incomplete_quests = Quest.objects.exclude(id__in=completed_quests)
+    serializer = QuestSerializer(incomplete_quests, many=True)
+    return Response(serializer.data)
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
 def quest_detail(request, pk):
     quest = get_object_or_404(Quest, pk=pk)
-    reviews = quest.reviews.all()
-    return render(request, 'quests/quest_detail.html', {'quest': quest, 'reviews': reviews})
+    serializer = QuestSerializer(quest)
+    return Response(serializer.data)
 
-@login_required
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+@transaction.atomic
 def complete_quest(request, quest_id):
-    user = User.objects.get(id=request.user.id)
-    user.level += 1
-    user.save()
+    user = request.user
     quest = get_object_or_404(Quest, id=quest_id)
-    done_quest = QuestCompletion.objects.create(
-        user=request.user,
-        quest=quest,
-    )
-    done_quest.save()
-    return redirect('quests:quest_list')
-
-class TicketListView(LoginRequiredMixin, View):
-    def get(self, request, *args, **kwargs):
-        tickets = Ticket.objects.all()
-        return render(request, 'quests/ticket_list.html', {'tickets': tickets})
     
-@login_required
+    # 既に完了しているかをチェック
+    if QuestCompletion.objects.filter(user=user, quest=quest).exists():
+        logger.info("Quest already completed")
+        return Response({'status': 'quest already completed'}, status=status.HTTP_200_OK)
+    
+    # クエスト完了処理
+    try:
+        user.level += 1
+        user.save()
+        done_quest = QuestCompletion.objects.create(user=user, quest=quest)
+        logger.info("Quest completed successfully")
+        return Response({'status': 'quest completed'}, status=status.HTTP_200_OK)
+    except Exception as e:
+        logger.error(f"Error completing quest: {e}")
+        return Response({'status': 'error', 'detail': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+class TicketViewSet(viewsets.ModelViewSet):
+    queryset = Ticket.objects.all()
+    serializer_class = TicketSerializer
+    permission_classes = [IsAuthenticated]
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+@transaction.atomic
 def use_ticket(request, issuance_id):
-    ticket = get_object_or_404(TicketIssuance, id=issuance_id)
-    ticket.used = True
-    ticket.save()
-    return redirect('accounts:profile')
+    ticket_issuance = get_object_or_404(TicketIssuance, id=issuance_id)
+    
+    # 既に使用されているかをチェック
+    if ticket_issuance.used:
+        logger.info("Ticket already used")
+        return Response({'status': 'ticket already used'}, status=status.HTTP_200_OK)
+    
+    # チケット使用処理
+    try:
+        ticket_issuance.used = True
+        ticket_issuance.save()
+        logger.info("Ticket used successfully")
+        return Response({'status': 'ticket used'}, status=status.HTTP_200_OK)
+    except Exception as e:
+        logger.error(f"Error using ticket: {e}")
+        return Response({'status': 'error', 'detail': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
-@login_required
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+@transaction.atomic
 def claim_ticket(request, ticket_id):
+    user = request.user
     ticket = get_object_or_404(Ticket, id=ticket_id)
-    ticket_issuance = TicketIssuance.objects.create(
-        user=request.user,
-        ticket=ticket
-    )
-    return redirect('accounts:profile')
+    
+    # 既にチケットが請求されているかをチェック
+    if TicketIssuance.objects.filter(user=user, ticket=ticket).exists():
+        logger.info("Ticket already claimed")
+        return Response({'status': 'ticket already claimed'}, status=status.HTTP_200_OK)
+    
+    # チケット請求処理
+    try:
+        ticket_issuance = TicketIssuance.objects.create(user=request.user, ticket=ticket)
+        ticket.issued_to.add(user)
+        ticket.save()
+        logger.info("Ticket claimed successfully")
+        return Response({'status': 'ticket claimed'}, status=status.HTTP_200_OK)
+    except Exception as e:
+        logger.error(f"Error claiming ticket: {e}")
+        return Response({'status': 'error', 'detail': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
-@login_required
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_ticket_issuances(request, ticket_id):
+    ticket = get_object_or_404(Ticket, id=ticket_id)
+    issuances = TicketIssuance.objects.filter(ticket=ticket)
+    serializer = TicketIssuanceSerializer(issuances, many=True)
+    return Response(serializer.data)
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
 def add_review(request, quest_id):
     quest = get_object_or_404(Quest, id=quest_id)
-    if request.method == 'POST':
-        form = ReviewForm(request.POST)
-        if form.is_valid():
-            review = form.save(commit=False)
-            review.user = request.user
-            review.quest = quest
-            review.save()
-            return redirect('quests:quest_detail', pk=quest_id)
-    else:
-        form = ReviewForm()
-    return render(request, 'quests/add_review.html', {'form': form, 'quest': quest})
+    serializer = ReviewSerializer(data=request.data)
+    if serializer.is_valid():
+        serializer.save(user=request.user, quest=quest)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_reviews(request, quest_id):
+    quest = get_object_or_404(Quest, id=quest_id)
+    reviews = quest.reviews.all()
+    serializer = ReviewSerializer(reviews, many=True)
+    return Response(serializer.data)
 
 def handle():
     now = timezone.now()
@@ -93,9 +153,7 @@ def generate_report_content(user):
         report_content += f'- {completion.quest.title} (Completed on {completion.completion_date})\n'
     return report_content
 
-
 def start():
     scheduler = BackgroundScheduler()
-
-    scheduler.add_job(handle, 'interval', seconds=12) # schedule
+    scheduler.add_job(handle, 'interval', days=1)  # 1日に1回ジョブを実行するようにスケジュール
     scheduler.start()

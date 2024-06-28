@@ -2,6 +2,8 @@ from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.utils.translation import gettext_lazy as _
 from .models import User
+from rest_framework.authtoken.admin import TokenAdmin
+from rest_framework.authtoken.models import Token
 
 class UserAdmin(BaseUserAdmin):
     fieldsets = (
@@ -21,3 +23,4 @@ class UserAdmin(BaseUserAdmin):
     ordering = ('account_id',)
 
 admin.site.register(User, UserAdmin)
+admin.site.register(Token, TokenAdmin)
