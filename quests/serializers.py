@@ -13,12 +13,14 @@ class QuestSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Quest
-        fields = ['id', 'title', 'description', 'location', 'reward', 'date_created', 'tags']
+        fields = ['id', 'title', 'description', 'location', 'badget', 'date_created', 'tags']
 
 class QuestCompletionSerializer(serializers.ModelSerializer):
+    quest = QuestSerializer(read_only=True)
+
     class Meta:
         model = QuestCompletion
-        fields = '__all__'
+        fields = ['id', 'user', 'quest', 'completion_date']
 
 class ReportSerializer(serializers.ModelSerializer):
     class Meta:

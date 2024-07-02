@@ -35,6 +35,13 @@ def quest_detail(request, pk):
     serializer = QuestSerializer(quest)
     return Response(serializer.data)
 
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_completed_quests(request):
+    user = request.user
+    completed_quests = QuestCompletion.objects.filter(user=user)
+    serializer = QuestCompletionSerializer(completed_quests, many=True)
+    return Response(serializer.data)
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])

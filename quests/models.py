@@ -12,7 +12,7 @@ class Quest(models.Model):
     title = models.CharField(max_length=200)
     description = models.TextField()
     location = models.CharField(max_length=200)
-    reward = models.CharField(max_length=100, null=True, blank=True)
+    badget = models.CharField(max_length=100, null=True, blank=True)
     date_created = models.DateTimeField(auto_now_add=True)
     tags = models.ManyToManyField(Tag, related_name='quests')
 
