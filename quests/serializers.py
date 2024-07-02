@@ -1,9 +1,16 @@
 from rest_framework import serializers
 
 from accounts.serializers import UserSerializer
-from .models import Quest, QuestCompletion, Report, Ticket, TicketIssuance, Review
+from .models import Quest, QuestCompletion, Report, Tag, Ticket, TicketIssuance, Review
+
+class TagSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Tag
+        fields = ['id', 'name']
 
 class QuestSerializer(serializers.ModelSerializer):
+    tags = TagSerializer(many=True, read_only=True)
+
     class Meta:
         model = Quest
         fields = ['id', 'title', 'description', 'location', 'reward', 'date_created', 'tags']
@@ -33,7 +40,7 @@ class TicketSerializer(serializers.ModelSerializer):
         fields = ['id', 'title', 'description', 'level', 'link', 'issued_to']
 
 class ReviewSerializer(serializers.ModelSerializer):
-    user = serializers.PrimaryKeyRelatedField(read_only=True)
+    user = UserSerializer(read_only=True)
     quest = serializers.PrimaryKeyRelatedField(read_only=True)
 
     class Meta:

@@ -134,6 +134,19 @@ def get_reviews(request, quest_id):
     serializer = ReviewSerializer(reviews, many=True)
     return Response(serializer.data)
 
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def search_quests_by_tag(request):
+    tag_name = request.query_params.get('tag')
+    logger.info(f"Received search request for tag: {tag_name}")
+    if tag_name:
+        quests = Quest.objects.filter(tags__name=tag_name)
+        serializer = QuestSerializer(quests, many=True)
+        logger.info(f"Found quests: {serializer.data}")
+        return Response(serializer.data)
+    logger.error("Tag not provided")
+    return Response({'error': 'Tag not provided'}, status=400)
+
 def handle():
     now = timezone.now()
     users = User.objects.filter(due__lt=now, done=False)

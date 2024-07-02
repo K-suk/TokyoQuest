@@ -1,8 +1,9 @@
+# quests/urls.py
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from .views import (
     QuestViewSet, quest_detail, complete_quest, 
-    TicketViewSet, use_ticket, claim_ticket, add_review, 
+    TicketViewSet, search_quests_by_tag, use_ticket, claim_ticket, add_review, 
     get_incomplete_quests, get_ticket_issuances, get_reviews
 )
 
@@ -14,6 +15,7 @@ app_name = "quests"
 
 urlpatterns = [
     path('quests/incomplete/', get_incomplete_quests, name='get_incomplete_quests'),
+    path('quests/search/', search_quests_by_tag, name='search_quests_by_tag'),
     path('', include(router.urls)),
     path('quests/<int:pk>/', quest_detail, name='quest_detail'),
     path('quests/<int:quest_id>/complete/', complete_quest, name='complete_quest'),
