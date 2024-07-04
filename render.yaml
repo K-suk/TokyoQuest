@@ -1,0 +1,28 @@
+databases:
+  - name: tokyo_quest_render_db
+    databaseName: tokyo_quest_render_db
+    user: tokyo_quest_admin
+    region: oregon
+    plan: free
+
+services:
+  - type: web
+    name: tokyoquest
+    env: python
+    region: oregon
+    plan: free
+    branch: main
+    healthCheckPath: /
+    buildCommand: "./build.sh"
+    startCommand: "gunicorn tokyoquest.wsgi:application"
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: tokyo_quest_render_db
+          property: connectionString
+      - key: SECRET_KEY
+        generateValue: true
+      - key: WEB_CONCURRENCY
+        value: 4
+
+    autoDeploy: true

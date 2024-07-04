@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <h2>Profile</h2>
+    <p>First Name: {{ user.first_name }}</p>
+    <p>Last Name: {{ user.last_name }}</p>
+    <p>Email: {{ user.email }}</p>
+    <p>Contact Address: {{ user.contact_address }}</p>
+    <p>Level: {{ user.level }}</p>
+    <a href="{% url 'accounts:profile_edit' %}">Edit Profile</a>
+
+    <h2>Issued Tickets</h2>
+    <ul>
+        {% for issuance in issued_tickets %}
+            <li>{{ issuance.ticket.title }} - {{ issuance.ticket.description }} - <a href="{{ issuance.ticket.link }}" target="_blank">More Info</a></li>
+            {% if issuance.used %}
+                <li>Already Used</li>
+            {% else %}
+                <li><a href="{% url 'quests:use_ticket' issuance.id %}">Use</a></li>
+            {% endif %}
+        {% endfor %}
+    </ul>
+
+    <h2>Available Tickets</h2>
+    <ul>
+        {% for ticket in tickets %}
+            <li>{{ ticket.title }} - {{ ticket.description }} - <a href="{{ ticket.link }}" target="_blank">More Info</a></li>
+            {% if user.level >= ticket.level %}
+                <li><a href="{% url 'quests:claim_ticket' ticket.id %}">Claim</a></li>
+            {% else %}
+                <li>Level {{ ticket.level }} to unlock</li>
+            {% endif %}
+        {% endfor %}
+    </ul>
+{% endblock %}

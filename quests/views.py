@@ -11,6 +11,7 @@ from apscheduler.schedulers.background import BackgroundScheduler
 import logging
 from rest_framework import status
 from django.db import transaction
+import uuid
 
 logger = logging.getLogger(__name__)
 
@@ -153,6 +154,26 @@ def search_quests_by_tag(request):
         return Response(serializer.data)
     logger.error("Tag not provided")
     return Response({'error': 'Tag not provided'}, status=400)
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def report_view(request):
+    request_id = uuid.uuid4()
+    print(f"Request {request_id} - Report View accessed")  # デバッグ情報
+    print(f"Request {request_id} - User {request.user.id} done flag: {request.user.done}")  # ユーザーのdoneフラグをログに出力
+    try:
+        if request.user.done:
+            print(f"Request {request_id} - User {request.user.id} has done flag set to True")  # デバッグ情報
+            report = Report.objects.get(user=request.user)
+            serializer = ReportSerializer(report)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        else:
+            print(f"Request {request_id} - User {request.user.id} does not have permission")  # デバッグ情報
+            return Response({'detail': 'You do not have permission to view this resource.'}, status=status.HTTP_403_FORBIDDEN)
+    except Report.DoesNotExist:
+        print(f"Request {request_id} - Report not found for user {request.user.id}")  # デバッグ情報
+        return Response({'detail': 'Report not found.'}, status=status.HTTP_404_NOT_FOUND)
+
 
 def handle():
     now = timezone.now()

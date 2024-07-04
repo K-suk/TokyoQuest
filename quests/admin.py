@@ -11,7 +11,7 @@ class TagAdmin(admin.ModelAdmin):
 
 @admin.register(Quest)
 class QuestAdmin(admin.ModelAdmin):
-    list_display = ('id', 'title', 'location', 'badget', 'date_created')
+    list_display = ('id', 'title', 'location', 'badget', 'date_created', 'imgUrl', 'exampleUrl')
     search_fields = ('id', 'title', 'location', 'badget')
     list_filter = ('date_created', 'tags')
     filter_horizontal = ('tags',)

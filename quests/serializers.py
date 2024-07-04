@@ -13,7 +13,7 @@ class QuestSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Quest
-        fields = ['id', 'title', 'description', 'location', 'badget', 'date_created', 'tags']
+        fields = ['id', 'title', 'description', 'location', 'badget', 'date_created', 'tags', 'imgUrl', 'exampleUrl']
 
 class QuestCompletionSerializer(serializers.ModelSerializer):
     quest = QuestSerializer(read_only=True)
@@ -23,9 +23,11 @@ class QuestCompletionSerializer(serializers.ModelSerializer):
         fields = ['id', 'user', 'quest', 'completion_date']
 
 class ReportSerializer(serializers.ModelSerializer):
+    user = UserSerializer(read_only=True)
+
     class Meta:
         model = Report
-        fields = '__all__'
+        fields = ['id', 'user', 'report_date', 'content']
 
 class TicketIssuanceSerializer(serializers.ModelSerializer):
     user = UserSerializer()

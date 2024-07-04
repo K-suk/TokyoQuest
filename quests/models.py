@@ -6,11 +6,16 @@ class Tag(models.Model):
     id = models.IntegerField(primary_key=True)
     name = models.CharField(max_length=50)
     created_at = models.DateTimeField(auto_now_add=True)
+    
+    def __str__(self):
+        return self.name
 
 class Quest(models.Model):
     id = models.IntegerField(primary_key=True)
     title = models.CharField(max_length=200)
     description = models.TextField()
+    imgUrl = models.URLField(max_length=200, null=True, blank=True)
+    exampleUrl = models.URLField(max_length=200, null=True, blank=True)
     location = models.CharField(max_length=200)
     badget = models.CharField(max_length=100, null=True, blank=True)
     date_created = models.DateTimeField(auto_now_add=True)
