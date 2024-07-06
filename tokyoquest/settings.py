@@ -117,6 +117,7 @@ CORS_ALLOWED_ORIGINS = [
     "https://tokyo-quest-front-ksd9lf8u1-kosukes-projects-11574484.vercel.app",  # 本番環境のフロントエンドURL
 ]
 
+
 ROOT_URLCONF = "tokyoquest.urls"
 
 TEMPLATES = [
