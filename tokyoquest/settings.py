@@ -114,7 +114,7 @@ MIDDLEWARE = [
 
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",  # Next.js開発サーバーのURL
-    # "https://your-production-frontend-url.com",  # 本番環境のフロントエンドURL
+    "https://tokyo-quest-front-ksd9lf8u1-kosukes-projects-11574484.vercel.app",  # 本番環境のフロントエンドURL
 ]
 
 ROOT_URLCONF = "tokyoquest.urls"
