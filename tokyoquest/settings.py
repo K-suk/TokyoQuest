@@ -269,10 +269,10 @@ SESSION_ENGINE = 'django.contrib.sessions.backends.db'
 
 CSP_DEFAULT_SRC = ("'self'",)
 CSP_SCRIPT_SRC = ("'self'",)
-CSP_STYLE_SRC = ("'self'", "'unsafe-inline'")
+CSP_STYLE_SRC = ("'self'", "'unsafe-inline'", "https://cdnjs.cloudflare.com")
 CSP_IMG_SRC = ("'self'", "data:")
 CSP_CONNECT_SRC = ("'self'", "https://tokyoquest.onrender.com", "https://tokyo-quest-front.vercel.app")
-CSP_FONT_SRC = ("'self'",)
+CSP_FONT_SRC = ("'self'", "https://cdnjs.cloudflare.com")
 
 CORS_ALLOW_METHODS = [
     'DELETE',
