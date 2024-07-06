@@ -114,8 +114,9 @@ MIDDLEWARE = [
 
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
-    "https://tokyo-quest-front.vercel.app",  # デプロイしたフロントエンドのURL
+    "https://tokyo-quest-front.vercel.app",
     "https://tokyo-quest-front-ksd9lf8u1-kosukes-projects-11574484.vercel.app",
+    "https://tokyo-quest-front-e2jzgad1x-kosukes-projects-11574484.vercel.app",
 ]
 
 ROOT_URLCONF = "tokyoquest.urls"
@@ -183,10 +184,22 @@ LOGGING = {
         'console': {
             'class': 'logging.StreamHandler',
         },
+        'file': {
+            'level': 'DEBUG',
+            'class': 'logging.FileHandler',
+            'filename': 'debug.log',
+        },
     },
-    'root': {
-        'handlers': ['console'],
-        'level': 'DEBUG',
+    'loggers': {
+        'django': {
+            'handlers': ['console', 'file'],
+            'level': 'DEBUG',
+        },
+        'django.request': {
+            'handlers': ['console', 'file'],
+            'level': 'DEBUG',
+            'propagate': True,
+        },
     },
 }
 
@@ -253,3 +266,10 @@ SUPERUSER_EMAIL = env("SUPERUSER_EMAIL")
 SUPERUSER_PASSWORD = env("SUPERUSER_PASSWORD")
 
 SESSION_ENGINE = 'django.contrib.sessions.backends.db'
+
+CSP_DEFAULT_SRC = ("'self'",)
+CSP_SCRIPT_SRC = ("'self'",)
+CSP_STYLE_SRC = ("'self'", "'unsafe-inline'")
+CSP_IMG_SRC = ("'self'", "data:")
+CSP_CONNECT_SRC = ("'self'", "https://tokyoquest.onrender.com", "https://tokyo-quest-front.vercel.app")
+CSP_FONT_SRC = ("'self'",)
