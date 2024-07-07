@@ -114,7 +114,7 @@ MIDDLEWARE = [
 
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
-    "https://tokyo-quest-front.vercel.app",
+    "https://tokyoquest-front.vercel.app/",
     "https://tokyoquest-front-afi45q0ub-kosukes-projects-11574484.vercel.app"
 ]
 
