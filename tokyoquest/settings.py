@@ -142,8 +142,8 @@ WSGI_APPLICATION = "tokyoquest.wsgi.application"
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
-default_dburl = "sqlite:///" + str(BASE_DIR / "db.sqlite3")
-
+# default_dburl = "sqlite:///" + str(BASE_DIR / "db.sqlite3")
+# 
 # DATABASES = {
 #     "default": {
 #         "ENGINE": "django.db.backends.sqlite3",
@@ -151,8 +151,14 @@ default_dburl = "sqlite:///" + str(BASE_DIR / "db.sqlite3")
 #     }
 # }
 
+# DATABASES = {
+#     "default": config("DATABASE_URL", default=default_dburl, cast=dburl),
+# }
+# データベース設定
 DATABASES = {
-    "default": config("DATABASE_URL", default=default_dburl, cast=dburl),
+    'default': dj_database_url.config(
+        default=env('DATABASE_URL')
+    )
 }
 
 # Password validation
