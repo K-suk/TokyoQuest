@@ -23,12 +23,18 @@ from rest_framework_simplejwt.views import (
 from django.conf import settings
 from django.conf.urls.static import static
 
+# urlpatterns = [
+#     path('miasanmia_admin_url/', admin.site.urls),
+#     path('api/', include('quests.urls')),
+#     path('api/accounts/', include('accounts.urls')),
+# ]
+
+# # メディアファイルを提供するための設定
+# if settings.DEBUG:
+#     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
 urlpatterns = [
     path('miasanmia_admin_url/', admin.site.urls),
     path('api/', include('quests.urls')),
     path('api/accounts/', include('accounts.urls')),
-]
-
-# メディアファイルを提供するための設定
-if settings.DEBUG:
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

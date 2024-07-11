@@ -54,21 +54,21 @@ def complete_quest(request, quest_id):
     user = request.user
     quest = get_object_or_404(Quest, id=quest_id)
     
-    # 既に完了しているかをチェック
     if QuestCompletion.objects.filter(user=user, quest=quest).exists():
-        logger.info("Quest already completed")
         return Response({'status': 'quest already completed'}, status=status.HTTP_200_OK)
     
-    # クエスト完了処理
     try:
-        media_file = request.FILES.get('media', None)
+        media_file = request.FILES.get('media')
+        if not media_file:
+            return Response({'status': 'error', 'detail': 'メディアファイルが必要です。'}, status=status.HTTP_400_BAD_REQUEST)
+        
         user.level += 1
         user.save()
+        
         done_quest = QuestCompletion.objects.create(user=user, quest=quest, media=media_file)
-        logger.info("Quest completed successfully")
+        
         return Response({'status': 'quest completed'}, status=status.HTTP_200_OK)
     except Exception as e:
-        logger.error(f"Error completing quest: {e}")
         return Response({'status': 'error', 'detail': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 class TicketViewSet(viewsets.ModelViewSet):
