@@ -12,6 +12,8 @@ import logging
 from rest_framework import status
 from django.db import transaction
 import uuid
+from rest_framework.parsers import MultiPartParser, FormParser
+from rest_framework.decorators import parser_classes
 
 logger = logging.getLogger(__name__)
 
@@ -46,6 +48,7 @@ def get_completed_quests(request):
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
+@parser_classes([MultiPartParser, FormParser])
 @transaction.atomic
 def complete_quest(request, quest_id):
     user = request.user
@@ -58,9 +61,10 @@ def complete_quest(request, quest_id):
     
     # クエスト完了処理
     try:
+        media_file = request.FILES.get('media', None)
         user.level += 1
         user.save()
-        done_quest = QuestCompletion.objects.create(user=user, quest=quest)
+        done_quest = QuestCompletion.objects.create(user=user, quest=quest, media=media_file)
         logger.info("Quest completed successfully")
         return Response({'status': 'quest completed'}, status=status.HTTP_200_OK)
     except Exception as e:

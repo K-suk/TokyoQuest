@@ -25,6 +25,7 @@ class QuestCompletion(models.Model):
     user = models.ForeignKey('accounts.User', on_delete=models.CASCADE)
     quest = models.ForeignKey(Quest, on_delete=models.CASCADE)
     completion_date = models.DateTimeField(auto_now_add=True)
+    media = models.FileField(upload_to='media/', null=True, blank=True)
     
 class Ticket(models.Model):
     id = models.IntegerField(primary_key=True)

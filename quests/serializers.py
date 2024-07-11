@@ -20,7 +20,7 @@ class QuestCompletionSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = QuestCompletion
-        fields = ['id', 'user', 'quest', 'completion_date']
+        fields = ['id', 'user', 'quest', 'completion_date', 'media']
 
 class ReportSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)

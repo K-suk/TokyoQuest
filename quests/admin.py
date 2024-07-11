@@ -18,7 +18,7 @@ class QuestAdmin(admin.ModelAdmin):
 
 @admin.register(QuestCompletion)
 class QuestCompletionAdmin(admin.ModelAdmin):
-    list_display = ('user', 'quest', 'completion_date')
+    list_display = ('user', 'quest', 'completion_date', 'media')
     search_fields = ('user__username', 'quest__title')
     list_filter = ('completion_date',)
 
