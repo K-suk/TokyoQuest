@@ -35,3 +35,5 @@ python-decouple
 gunicorn
 psycopg2-binary
 whitenoise
+django-storages
+google-cloud-storage

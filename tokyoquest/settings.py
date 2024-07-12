@@ -12,11 +12,13 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 
 from datetime import timedelta
 import os
+import json
 from pathlib import Path
 import dj_database_url
 import environ
 from decouple import config
 from dj_database_url import parse as dburl
+from google.oauth2 import service_account
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -54,6 +56,7 @@ INSTALLED_APPS = [
     "corsheaders",
     "rest_framework_simplejwt",
     "rest_framework_simplejwt.token_blacklist",
+    "storages",  # 追加
 ]
 
 REST_FRAMEWORK = {
@@ -115,7 +118,6 @@ MIDDLEWARE = [
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "https://tokyoquest-front.vercel.app",
-    "https://tokyoquest-front-afi45q0ub-kosukes-projects-11574484.vercel.app"
 ]
 
 ROOT_URLCONF = "tokyoquest.urls"
@@ -302,3 +304,18 @@ CORS_ALLOW_HEADERS = [
     'x-csrftoken',
     'x-requested-with',
 ]
+
+# Google Cloud Storageの設定
+GOOGLE_APPLICATION_CREDENTIALS_JSON = os.getenv('GOOGLE_APPLICATION_CREDENTIALS_JSON')
+GS_CREDENTIALS = service_account.Credentials.from_service_account_info(
+    json.loads(GOOGLE_APPLICATION_CREDENTIALS_JSON)
+)
+GS_BUCKET_NAME = env('GS_BUCKET_NAME')
+
+# Django Storagesの設定
+DEFAULT_FILE_STORAGE = 'storages.backends.gcloud.GoogleCloudStorage'
+STATICFILES_STORAGE = 'storages.backends.gcloud.GoogleCloudStorage'
+GS_DEFAULT_ACL = 'publicRead'
+
+# メディアファイルのURL
+MEDIA_URL = f'https://storage.googleapis.com/{GS_BUCKET_NAME}/'
