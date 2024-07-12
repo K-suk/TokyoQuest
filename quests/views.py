@@ -63,6 +63,7 @@ def complete_quest(request, quest_id):
     try:
         media_file = request.FILES.get('media')
         if not media_file:
+            logger.error("No media file provided")
             return Response({'status': 'error', 'detail': 'No media file provided'}, status=status.HTTP_400_BAD_REQUEST)
         
         user.level += 1
@@ -71,7 +72,7 @@ def complete_quest(request, quest_id):
         logger.info("Quest completed successfully")
         return Response({'status': 'quest completed'}, status=status.HTTP_200_OK)
     except Exception as e:
-        logger.error(f"Error completing quest: {e}")
+        logger.error(f"Error completing quest: {e}", exc_info=True)
         return Response({'status': 'error', 'detail': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 class TicketViewSet(viewsets.ModelViewSet):
