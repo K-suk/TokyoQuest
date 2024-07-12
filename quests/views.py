@@ -55,28 +55,28 @@ def complete_quest(request, quest_id):
     quest = get_object_or_404(Quest, id=quest_id)
     
     if QuestCompletion.objects.filter(user=user, quest=quest).exists():
-        logger.info("Quest already completed")
+        print("Quest already completed")
         return Response({'status': 'quest already completed'}, status=status.HTTP_200_OK)
     
     try:
-        # デバッグ用にリクエスト内容をログに記録
-        logger.info(f"Request method: {request.method}")
-        logger.info(f"Request content-type: {request.content_type}")
-        logger.info(f"Request FILES: {request.FILES}")
-        logger.info(f"Request POST: {request.POST}")
+        # デバッグ用にリクエスト内容をprintで出力
+        print(f"Request method: {request.method}")
+        print(f"Request content-type: {request.content_type}")
+        print(f"Request FILES: {request.FILES}")
+        print(f"Request POST: {request.POST}")
 
         media_file = request.FILES.get('media')
         if not media_file:
-            logger.error("No media file provided")
+            print("No media file provided")
             return Response({'status': 'error', 'detail': 'No media file provided'}, status=status.HTTP_400_BAD_REQUEST)
         
         user.level += 1
         user.save()
         done_quest = QuestCompletion.objects.create(user=user, quest=quest, media=media_file)
-        logger.info("Quest completed successfully")
+        print("Quest completed successfully")
         return Response({'status': 'quest completed'}, status=status.HTTP_200_OK)
     except Exception as e:
-        logger.error(f"Error completing quest: {e}", exc_info=True)
+        print(f"Error completing quest: {e}")
         return Response({'status': 'error', 'detail': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 class TicketViewSet(viewsets.ModelViewSet):
