@@ -34,8 +34,10 @@ class PathAndRename:
         ext = filename.split('.')[-1]
         # 新しいファイル名を生成（ここではUUIDを使用）
         filename = '{}.{}'.format(uuid.uuid4().hex, ext)
+        # タグ名を取得（タグが複数ある場合、最初のタグを使用）
+        tag_name = instance.quest.tags.first().name if instance.quest.tags.exists() else 'default'
         # 新しいファイルパスを生成
-        return os.path.join(self.path, str(instance.user.id), filename)
+        return os.path.join(self.path, str(instance.user.id), tag_name, filename)
 
 path_and_rename = PathAndRename("media")
 
