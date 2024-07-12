@@ -315,7 +315,6 @@ GS_BUCKET_NAME = env('GS_BUCKET_NAME')
 # Django Storagesの設定
 DEFAULT_FILE_STORAGE = 'storages.backends.gcloud.GoogleCloudStorage'
 STATICFILES_STORAGE = 'storages.backends.gcloud.GoogleCloudStorage'
-GS_DEFAULT_ACL = 'publicRead'
 
 # メディアファイルのURL
 MEDIA_URL = f'https://storage.googleapis.com/{GS_BUCKET_NAME}/'
