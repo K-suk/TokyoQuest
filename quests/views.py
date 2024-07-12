@@ -54,13 +54,17 @@ def complete_quest(request, quest_id):
     user = request.user
     quest = get_object_or_404(Quest, id=quest_id)
     
-    # 既に完了しているかをチェック
     if QuestCompletion.objects.filter(user=user, quest=quest).exists():
         logger.info("Quest already completed")
         return Response({'status': 'quest already completed'}, status=status.HTTP_200_OK)
     
-    # クエスト完了処理
     try:
+        # デバッグ用にリクエスト内容をログに記録
+        logger.info(f"Request method: {request.method}")
+        logger.info(f"Request content-type: {request.content_type}")
+        logger.info(f"Request FILES: {request.FILES}")
+        logger.info(f"Request POST: {request.POST}")
+
         media_file = request.FILES.get('media')
         if not media_file:
             logger.error("No media file provided")
