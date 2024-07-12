@@ -1,6 +1,9 @@
 # quests/models.py
 from django.db import models
 from django.conf import settings
+from django.utils.deconstruct import deconstructible
+import os
+import uuid
 
 class Tag(models.Model):
     id = models.IntegerField(primary_key=True)
@@ -21,11 +24,26 @@ class Quest(models.Model):
     date_created = models.DateTimeField(auto_now_add=True)
     tags = models.ManyToManyField(Tag, related_name='quests')
 
+@deconstructible
+class PathAndRename:
+    def __init__(self, path):
+        self.path = path
+
+    def __call__(self, instance, filename):
+        # 拡張子を取得
+        ext = filename.split('.')[-1]
+        # 新しいファイル名を生成（ここではUUIDを使用）
+        filename = '{}.{}'.format(uuid.uuid4().hex, ext)
+        # 新しいファイルパスを生成
+        return os.path.join(self.path, str(instance.user.id), filename)
+
+path_and_rename = PathAndRename("media")
+
 class QuestCompletion(models.Model):
     user = models.ForeignKey('accounts.User', on_delete=models.CASCADE)
     quest = models.ForeignKey(Quest, on_delete=models.CASCADE)
     completion_date = models.DateTimeField(auto_now_add=True)
-    media = models.FileField(upload_to='media/', null=True, blank=True)
+    media = models.FileField(upload_to=path_and_rename, null=True, blank=True)
     
 class Ticket(models.Model):
     id = models.IntegerField(primary_key=True)
