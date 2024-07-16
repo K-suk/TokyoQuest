@@ -8,12 +8,12 @@ import uuid
 class Tag(models.Model):
     name = models.CharField(max_length=100)
     created_at = models.DateTimeField(auto_now_add=True)
-    
+
     def __str__(self):
         return self.name
 
 class Quest(models.Model):
-    id = models.AutoField(primary_key=True)
+    id = models.IntegerField(primary_key=True)
     title = models.CharField(max_length=200)
     description = models.TextField()
     imgUrl = models.URLField(max_length=300, null=True, blank=True)
