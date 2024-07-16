@@ -6,6 +6,7 @@ import os
 import uuid
 
 class Tag(models.Model):
+    id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=100)
     created_at = models.DateTimeField(auto_now_add=True)
     
@@ -13,7 +14,7 @@ class Tag(models.Model):
         return self.name
 
 class Quest(models.Model):
-    id = models.IntegerField(primary_key=True)
+    id = models.AutoField(primary_key=True)
     title = models.CharField(max_length=200)
     description = models.TextField()
     imgUrl = models.URLField(max_length=300, null=True, blank=True)
