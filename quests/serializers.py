@@ -6,7 +6,7 @@ from .models import Quest, QuestCompletion, Report, Tag, Ticket, TicketIssuance,
 class TagSerializer(serializers.ModelSerializer):
     class Meta:
         model = Tag
-        fields = ['id', 'name']
+        fields = ['name']
 
 class QuestSerializer(serializers.ModelSerializer):
     tags = TagSerializer(many=True, read_only=True)

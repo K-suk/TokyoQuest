@@ -6,8 +6,8 @@ User = get_user_model()
 
 @admin.register(Tag)
 class TagAdmin(admin.ModelAdmin):
-    list_display = ('id', 'name', 'created_at')
-    search_fields = ('id', 'name')
+    list_display = ('name', 'created_at')
+    search_fields = ('name')
 
 @admin.register(Quest)
 class QuestAdmin(admin.ModelAdmin):
