@@ -14,8 +14,8 @@ class Command(BaseCommand):
     def save_to_django(self, quests):
         for quest_data in quests:
             tags = quest_data.pop("tags")
-            quest, created = Quest.objects.get_or_create(**quest_data)
             for tag_name in tags:
                 tag, _ = Tag.objects.get_or_create(name=tag_name)
-                quest.tags.add(tag)
+            quest, created = Quest.objects.get_or_create(**quest_data)
+            quest.tags.add(tag)
             quest.save()
