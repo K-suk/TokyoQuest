@@ -1,4 +1,3 @@
-# quests/models.py
 from django.db import models
 from django.conf import settings
 from django.utils.deconstruct import deconstructible
@@ -13,7 +12,6 @@ class Tag(models.Model):
         return self.name
 
 class Quest(models.Model):
-    id = models.IntegerField(primary_key=True)
     title = models.CharField(max_length=200)
     description = models.TextField()
     imgUrl = models.URLField(max_length=300, null=True, blank=True)
@@ -29,13 +27,9 @@ class PathAndRename:
         self.path = path
 
     def __call__(self, instance, filename):
-        # 拡張子を取得
         ext = filename.split('.')[-1]
-        # 新しいファイル名を生成（ここではUUIDを使用）
         filename = '{}.{}'.format(uuid.uuid4().hex, ext)
-        # タグ名を取得（タグが複数ある場合、最初のタグを使用）
         tag_name = instance.quest.tags.first().name if instance.quest.tags.exists() else 'default'
-        # 新しいファイルパスを生成
         return os.path.join(self.path, str(instance.user.id), tag_name, filename)
 
 path_and_rename = PathAndRename("media")
@@ -45,9 +39,8 @@ class QuestCompletion(models.Model):
     quest = models.ForeignKey(Quest, on_delete=models.CASCADE)
     completion_date = models.DateTimeField(auto_now_add=True)
     media = models.FileField(upload_to=path_and_rename, null=True, blank=True)
-    
+
 class Ticket(models.Model):
-    id = models.IntegerField(primary_key=True)
     title = models.CharField(max_length=100)
     description = models.TextField()
     level = models.IntegerField(blank=True, null=True)
@@ -55,19 +48,18 @@ class Ticket(models.Model):
     issued_to = models.ManyToManyField(settings.AUTH_USER_MODEL, through='TicketIssuance', related_name='tickets')
 
 class TicketIssuance(models.Model):
-    id = models.IntegerField(primary_key=True)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     ticket = models.ForeignKey(Ticket, on_delete=models.CASCADE)
     issue_date = models.DateTimeField(auto_now_add=True)
     used = models.BooleanField(default=False)
-    
+
 class Review(models.Model):
     quest = models.ForeignKey(Quest, on_delete=models.CASCADE, related_name='reviews')
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     rating = models.PositiveIntegerField()
     comment = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
-    
+
 class Report(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     report_date = models.DateTimeField(auto_now_add=True)
