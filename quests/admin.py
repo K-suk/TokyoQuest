@@ -6,12 +6,13 @@ User = get_user_model()
 
 @admin.register(Tag)
 class TagAdmin(admin.ModelAdmin):
-    list_display = ('name', 'created_at')
+    list_display = ('id', 'name', 'created_at')
+    search_fields = ('id', 'name')
 
 @admin.register(Quest)
 class QuestAdmin(admin.ModelAdmin):
-    list_display = ('title', 'location', 'badget', 'date_created', 'imgUrl', 'exampleUrl')
-    search_fields = ('title', 'location', 'badget')
+    list_display = ('id', 'title', 'location', 'badget', 'date_created', 'imgUrl', 'exampleUrl')
+    search_fields = ('id', 'title', 'location', 'badget')
     list_filter = ('date_created', 'tags')
     filter_horizontal = ('tags',)
 
@@ -23,7 +24,7 @@ class QuestCompletionAdmin(admin.ModelAdmin):
 
 @admin.register(Ticket)
 class TicketAdmin(admin.ModelAdmin):
-    list_display = ('title', 'description', 'link', 'level', 'issued_to_users')
+    list_display = ('id', 'title', 'description', 'link', 'level', 'issued_to_users')
     search_fields = ('title', 'description', 'link', 'level')
 
     def issued_to_users(self, obj):
@@ -32,8 +33,8 @@ class TicketAdmin(admin.ModelAdmin):
 
 @admin.register(TicketIssuance)
 class TicketIssuanceAdmin(admin.ModelAdmin):
-    list_display = ('user', 'ticket', 'issue_date', 'used')
-    search_fields = ('user__account_id', 'ticket__title')
+    list_display = ('id', 'user', 'ticket', 'issue_date', 'used')
+    search_fields = ('id', 'user__account_id', 'ticket__title')
     list_filter = ('issue_date', 'used')
 
 @admin.register(Review)

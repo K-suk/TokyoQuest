@@ -9,31 +9,11 @@ class TagSerializer(serializers.ModelSerializer):
         fields = ['id', 'name']
 
 class QuestSerializer(serializers.ModelSerializer):
-    tags = TagSerializer(many=True)
-    imgUrl = serializers.URLField(required=False, allow_blank=True)
-    exampleUrl = serializers.URLField(required=False, allow_blank=True)
+    tags = TagSerializer(many=True, read_only=True)
 
     class Meta:
         model = Quest
         fields = ['id', 'title', 'description', 'location', 'badget', 'date_created', 'tags', 'imgUrl', 'exampleUrl']
-        read_only_fields = ('id', 'date_created')
-
-    def create(self, validated_data):
-        tags_data = validated_data.pop('tags')
-        quest = Quest.objects.create(**validated_data)
-        for tag_data in tags_data:
-            tag, created = Tag.objects.get_or_create(name=tag_data['name'])
-            quest.tags.add(tag)
-        return quest
-
-    def update(self, instance, validated_data):
-        tags_data = validated_data.pop('tags')
-        instance = super().update(instance, validated_data)
-        instance.tags.clear()
-        for tag_data in tags_data:
-            tag, created = Tag.objects.get_or_create(name=tag_data['name'])
-            instance.tags.add(tag)
-        return instance
 
 class QuestCompletionSerializer(serializers.ModelSerializer):
     quest = QuestSerializer(read_only=True)
