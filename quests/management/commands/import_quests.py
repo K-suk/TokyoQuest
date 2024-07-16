@@ -767,16 +767,11 @@ class Command(BaseCommand):
         
         self.save_to_django(quests_data)
 
-    def save_to_django(self, quests):
+    def save_to_django(quests):
         for quest_data in quests:
             tags = quest_data.pop("tags")
-            quest, created = Quest.objects.update_or_create(
-                id=quest_data["id"],
-                defaults=quest_data
-            )
+            quest, created = Quest.objects.get_or_create(**quest_data)
             for tag_name in tags:
-                tag, created = Tag.objects.get_or_create(name=tag_name)
+                tag, _ = Tag.objects.get_or_create(name=tag_name)
                 quest.tags.add(tag)
             quest.save()
-
-        self.stdout.write(self.style.SUCCESS('Quests imported successfully!'))
