@@ -1,3 +1,4 @@
+import random
 from rest_framework import viewsets, generics
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
@@ -5,15 +6,16 @@ from rest_framework.permissions import IsAuthenticated
 from django.utils import timezone
 from django.shortcuts import get_object_or_404
 from accounts.models import User
-from .models import Quest, QuestCompletion, Report, Ticket, TicketIssuance, Review
-from .serializers import QuestSerializer, QuestCompletionSerializer, ReportSerializer, TicketSerializer, TicketIssuanceSerializer, ReviewSerializer
+from .models import Quest, QuestCompletion, Report, Tag, Ticket, TicketIssuance, Review, TravelPlan
+from .serializers import QuestSerializer, QuestCompletionSerializer, ReportSerializer, TicketSerializer, TicketIssuanceSerializer, ReviewSerializer, TravelPlanSerializer
 from apscheduler.schedulers.background import BackgroundScheduler
 import logging
 from rest_framework import status
 from django.db import transaction
 import uuid
 from rest_framework.parsers import MultiPartParser, FormParser
-from rest_framework.decorators import parser_classes
+from rest_framework.decorators import parser_classes, action
+from django.db.models import Q
 
 logger = logging.getLogger(__name__)
 
@@ -210,3 +212,54 @@ def start():
     scheduler = BackgroundScheduler()
     scheduler.add_job(handle, 'interval', days=1)  # 1日に1回ジョブを実行するようにスケジュール
     scheduler.start()
+    
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def create_travel_plan(request):
+    user = request.user
+    area = request.data.get('area')
+    if not area:
+        return Response({'error': 'Area is required'}, status=status.HTTP_400_BAD_REQUEST)
+
+    # エリアに基づいてクエストをフィルタリング
+    if area.lower() == 'shibuya':
+        quests = Quest.objects.filter(Q(tags__name='Shibuya') | Q(tags__name='Harajuku') | Q(tags__name='Shinjuku') | Q(tags__name='Yoyogi') | Q(tags__name='Ebisu'))
+    elif area.lower() == 'asakusa':
+        quests = Quest.objects.filter(Q(tags__name='Asakusa') | Q(tags__name='Ueno') | Q(tags__name='Ryogoku') | Q(tags__name='Akihabara'))
+    elif area.lower() == 'tokyo':
+        quests = Quest.objects.filter(Q(tags__name='Ginza') | Q(tags__name='Akasaka') | Q(tags__name='Azabu') | Q(tags__name='Tokyo') | Q(tags__name='Tsukiji') | Q(tags__name='Kagurazaka'))
+    elif area.lower() == 'odaiba':
+        quests = Quest.objects.filter(Q(tags__name='Tsukishima') | Q(tags__name='Kasai') | Q(tags__name='Toyosu') | Q(tags__name='Odaiba') | Q(tags__name='Roppongi'))
+
+    # 1日のプランを作成
+    try:
+        # タグを使ってフィルタリング
+        morning_quests = random.sample(list(quests.filter(Q(tags__name='Culture') | Q(tags__name='Amusement') | Q(tags__name='Art') | Q(tags__name='Architecture') | Q(tags__name='Local Experience') | Q(tags__name='Shrine') | Q(tags__name='Shopping') | Q(tags__name='Photo Spot') | Q(tags__name='Anime'))), 2)
+        lunch_quests = random.sample(list(quests.filter(tags__name='Food')), 1)
+        afternoon_quests = random.sample(list(quests.filter(Q(tags__name='Culture') | Q(tags__name='Amusement') | Q(tags__name='Art') | Q(tags__name='Architecture') | Q(tags__name='Local Experience') | Q(tags__name='Shrine') | Q(tags__name='Shopping') | Q(tags__name='Photo Spot') | Q(tags__name='Anime'))), 3)
+        break_quests = random.sample(list(quests.filter(Q(tags__name='Sweets') | Q(tags__name='Cafe'))), 1)
+        evening_quests = random.sample(list(quests.filter(Q(tags__name='Culture') | Q(tags__name='Amusement') | Q(tags__name='Art') | Q(tags__name='Architecture') | Q(tags__name='Local Experience') | Q(tags__name='Shrine') | Q(tags__name='Shopping') | Q(tags__name='Photo Spot') | Q(tags__name='Anime'))), 2)
+        dinner_quests = random.sample(list(quests.filter(tags__name='Food')), 1)
+        night_quests = random.sample(list(quests.filter(tags__name='Scenery')), 1)
+        drink_quests = random.sample(list(quests.filter(Q(tags__name='Bar') | Q(tags__name='Izakaya'))), 1)
+
+        # 全てのクエストをまとめる
+        all_quests = morning_quests + lunch_quests + afternoon_quests + break_quests + evening_quests + dinner_quests + night_quests + drink_quests
+
+        # トラベルプランを作成
+        travel_plan = TravelPlan.objects.create(user=user)
+        travel_plan.quests.set(all_quests)
+        travel_plan.save()
+
+        serializer = TravelPlanSerializer(travel_plan)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    except ValueError as e:
+        return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+    
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_travel_plan_detail(request, pk):
+    travel_plan = get_object_or_404(TravelPlan, pk=pk, user=request.user)
+    serializer = TravelPlanSerializer(travel_plan)
+    return Response(serializer.data, status=status.HTTP_200_OK)

@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Quest, Report, Review, Tag, QuestCompletion, Ticket, TicketIssuance
+from .models import Quest, Report, Review, Tag, QuestCompletion, Ticket, TicketIssuance, TravelPlan
 from django.contrib.auth import get_user_model
 
 User = get_user_model()
@@ -21,6 +21,16 @@ class QuestCompletionAdmin(admin.ModelAdmin):
     list_display = ('user', 'quest', 'completion_date', 'media')
     search_fields = ('user__username', 'quest__title')
     list_filter = ('completion_date',)
+
+@admin.register(TravelPlan)
+class TravelPlanAdmin(admin.ModelAdmin):
+    list_display = ('user', 'date_created')
+    search_fields = ('user__username',)
+    filter_horizontal = ('quests',)  # quests の管理に多対多フィールド用のウィジェットを使用
+
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        return qs.select_related('user').prefetch_related('quests')
 
 @admin.register(Ticket)
 class TicketAdmin(admin.ModelAdmin):

@@ -46,6 +46,14 @@ class QuestCompletion(models.Model):
     quest = models.ForeignKey(Quest, on_delete=models.CASCADE)
     completion_date = models.DateTimeField(auto_now_add=True)
     media = models.FileField(upload_to=path_and_rename, null=True, blank=True)
+
+class TravelPlan(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    quests = models.ManyToManyField(Quest, related_name='travel_plans')
+    date_created = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.user.username}'s Travel Plan"
     
 class Ticket(models.Model):
     id = models.IntegerField(primary_key=True)
