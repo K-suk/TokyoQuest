@@ -53,7 +53,7 @@ class TravelPlan(models.Model):
     date_created = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"{self.user.username}'s Travel Plan"
+        return f"{self.user.first_name}'s Travel Plan"
     
 class Ticket(models.Model):
     id = models.IntegerField(primary_key=True)

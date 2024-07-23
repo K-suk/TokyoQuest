@@ -220,7 +220,11 @@ def create_travel_plan(request):
     area = request.data.get('area')
     if not area:
         return Response({'error': 'Area is required'}, status=status.HTTP_400_BAD_REQUEST)
-
+    
+    existing_plan = TravelPlan.objects.filter(user=user).first()
+    if existing_plan:
+        existing_plan.delete()
+    
     # エリアに基づいてクエストをフィルタリング
     if area.lower() == 'shibuya':
         quests = Quest.objects.filter(Q(tags__name='Shibuya') | Q(tags__name='Harajuku') | Q(tags__name='Shinjuku') | Q(tags__name='Yoyogi') | Q(tags__name='Ebisu'))
@@ -234,15 +238,15 @@ def create_travel_plan(request):
     # 1日のプランを作成
     try:
         # タグを使ってフィルタリング
-        morning_quests = random.sample(list(quests.filter(Q(tags__name='Culture') | Q(tags__name='Amusement') | Q(tags__name='Art') | Q(tags__name='Architecture') | Q(tags__name='Local Experience') | Q(tags__name='Shrine') | Q(tags__name='Shopping') | Q(tags__name='Photo Spot') | Q(tags__name='Anime'))), 2)
-        lunch_quests = random.sample(list(quests.filter(tags__name='Food')), 1)
-        afternoon_quests = random.sample(list(quests.filter(Q(tags__name='Culture') | Q(tags__name='Amusement') | Q(tags__name='Art') | Q(tags__name='Architecture') | Q(tags__name='Local Experience') | Q(tags__name='Shrine') | Q(tags__name='Shopping') | Q(tags__name='Photo Spot') | Q(tags__name='Anime'))), 3)
-        break_quests = random.sample(list(quests.filter(Q(tags__name='Sweets') | Q(tags__name='Cafe'))), 1)
-        evening_quests = random.sample(list(quests.filter(Q(tags__name='Culture') | Q(tags__name='Amusement') | Q(tags__name='Art') | Q(tags__name='Architecture') | Q(tags__name='Local Experience') | Q(tags__name='Shrine') | Q(tags__name='Shopping') | Q(tags__name='Photo Spot') | Q(tags__name='Anime'))), 2)
-        dinner_quests = random.sample(list(quests.filter(tags__name='Food')), 1)
-        night_quests = random.sample(list(quests.filter(tags__name='Scenery')), 1)
-        drink_quests = random.sample(list(quests.filter(Q(tags__name='Bar') | Q(tags__name='Izakaya'))), 1)
-
+        morning_quests = random.sample(list(quests.filter(Q(tags__name='Culture') | Q(tags__name='Amusement') | Q(tags__name='Art') | Q(tags__name='Architecture') | Q(tags__name='Local Experience') | Q(tags__name='Shrine') | Q(tags__name='Shopping') | Q(tags__name='Photo Spot') | Q(tags__name='Anime'))), min(2, quests.filter(Q(tags__name='Culture') | Q(tags__name='Amusement') | Q(tags__name='Art') | Q(tags__name='Architecture') | Q(tags__name='Local Experience') | Q(tags__name='Shrine') | Q(tags__name='Shopping') | Q(tags__name='Photo Spot') | Q(tags__name='Anime')).count()))
+        lunch_quests = random.sample(list(quests.filter(tags__name='Food')), min(1, quests.filter(tags__name='Food').count()))
+        afternoon_quests = random.sample(list(quests.filter(Q(tags__name='Culture') | Q(tags__name='Amusement') | Q(tags__name='Art') | Q(tags__name='Architecture') | Q(tags__name='Local Experience') | Q(tags__name='Shrine') | Q(tags__name='Shopping') | Q(tags__name='Photo Spot') | Q(tags__name='Anime'))), min(3, quests.filter(Q(tags__name='Culture') | Q(tags__name='Amusement') | Q(tags__name='Art') | Q(tags__name='Architecture') | Q(tags__name='Local Experience') | Q(tags__name='Shrine') | Q(tags__name='Shopping') | Q(tags__name='Photo Spot') | Q(tags__name='Anime')).count()))
+        break_quests = random.sample(list(quests.filter(Q(tags__name='Sweets') | Q(tags__name='Cafe'))), min(1, quests.filter(Q(tags__name='Sweets') | Q(tags__name='Cafe')).count()))
+        evening_quests = random.sample(list(quests.filter(Q(tags__name='Culture') | Q(tags__name='Amusement') | Q(tags__name='Art') | Q(tags__name='Architecture') | Q(tags__name='Local Experience') | Q(tags__name='Shrine') | Q(tags__name='Shopping') | Q(tags__name='Photo Spot') | Q(tags__name='Anime'))), min(2, quests.filter(Q(tags__name='Culture') | Q(tags__name='Amusement') | Q(tags__name='Art') | Q(tags__name='Architecture') | Q(tags__name='Local Experience') | Q(tags__name='Shrine') | Q(tags__name='Shopping') | Q(tags__name='Photo Spot') | Q(tags__name='Anime')).count()))
+        dinner_quests = random.sample(list(quests.filter(tags__name='Food')), min(1, quests.filter(tags__name='Food').count()))
+        night_quests = random.sample(list(quests.filter(tags__name='Scenery')), min(1, quests.filter(tags__name='Scenery').count()))
+        drink_quests = random.sample(list(quests.filter(Q(tags__name='Bar') | Q(tags__name='Izakaya'))), min(1, quests.filter(Q(tags__name='Bar') | Q(tags__name='Izakaya')).count()))
+        
         # 全てのクエストをまとめる
         all_quests = morning_quests + lunch_quests + afternoon_quests + break_quests + evening_quests + dinner_quests + night_quests + drink_quests
 
@@ -256,10 +260,14 @@ def create_travel_plan(request):
 
     except ValueError as e:
         return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
-    
+
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
-def get_travel_plan_detail(request, pk):
-    travel_plan = get_object_or_404(TravelPlan, pk=pk, user=request.user)
-    serializer = TravelPlanSerializer(travel_plan)
-    return Response(serializer.data, status=status.HTTP_200_OK)
+def get_user_travel_plan(request):
+    user = request.user
+    travel_plan = TravelPlan.objects.filter(user=user).first()
+    if travel_plan:
+        serializer = TravelPlanSerializer(travel_plan)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    else:
+        return Response({'detail': 'No travel plan found for this user.'}, status=status.HTTP_404_NOT_FOUND)

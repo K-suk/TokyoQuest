@@ -3,9 +3,9 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from .views import (
-    QuestViewSet, report_view, quest_detail, complete_quest, 
+    QuestViewSet, get_user_travel_plan, report_view, quest_detail, complete_quest, 
     TicketViewSet, search_quests_by_tag, use_ticket, claim_ticket, add_review, 
-    get_incomplete_quests, get_ticket_issuances, get_reviews, get_completed_quests, get_travel_plan_detail,
+    get_incomplete_quests, get_ticket_issuances, get_reviews, get_completed_quests,
     create_travel_plan
 )
 
@@ -29,5 +29,5 @@ urlpatterns = [
     path('tickets/<int:ticket_id>/issuances/', get_ticket_issuances, name='get_ticket_issuances'),
     path('completed-quests/', get_completed_quests, name='completed-quests'),
     path('travel-plans/create_plan/', create_travel_plan, name='create_travel_plan'),
-    path('travel-plans/<int:pk>/', get_travel_plan_detail, name='get_travel_plan_detail'),
+    path('travel-plans/', get_user_travel_plan, name='get_user_travel_plan'),
 ]
