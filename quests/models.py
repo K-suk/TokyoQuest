@@ -46,6 +46,14 @@ class QuestCompletion(models.Model):
     quest = models.ForeignKey(Quest, on_delete=models.CASCADE)
     completion_date = models.DateTimeField(auto_now_add=True)
     media = models.FileField(upload_to=path_and_rename, null=True, blank=True)
+    
+class SavedQuest(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    quest = models.ForeignKey('Quest', on_delete=models.CASCADE)
+    saved_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        unique_together = ('user', 'quest')
 
 class TravelPlan(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)

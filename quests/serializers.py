@@ -1,7 +1,7 @@
 from rest_framework import serializers
 
 from accounts.serializers import UserSerializer
-from .models import Quest, QuestCompletion, Report, Tag, Ticket, TicketIssuance, Review, TravelPlan
+from .models import Quest, QuestCompletion, Report, SavedQuest, Tag, Ticket, TicketIssuance, Review, TravelPlan
 
 class TagSerializer(serializers.ModelSerializer):
     class Meta:
@@ -21,6 +21,13 @@ class QuestCompletionSerializer(serializers.ModelSerializer):
     class Meta:
         model = QuestCompletion
         fields = ['id', 'user', 'quest', 'completion_date', 'media']
+
+class SavedQuestSerializer(serializers.ModelSerializer):
+    quest = QuestSerializer(read_only=True)
+    
+    class Meta:
+        model = SavedQuest
+        fields = '__all__'
         
 class TravelPlanSerializer(serializers.ModelSerializer):
     quests = QuestSerializer(many=True)

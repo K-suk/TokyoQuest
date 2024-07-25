@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Quest, Report, Review, Tag, QuestCompletion, Ticket, TicketIssuance, TravelPlan
+from .models import Quest, Report, Review, SavedQuest, Tag, QuestCompletion, Ticket, TicketIssuance, TravelPlan
 from django.contrib.auth import get_user_model
 
 User = get_user_model()
@@ -58,3 +58,9 @@ class ReportAdmin(admin.ModelAdmin):
     list_display = ('user', 'report_date', 'content')
     search_fields = ('user__account_id', 'content')
     list_filter = ('report_date',)
+
+@admin.register(SavedQuest)
+class SavedQuestAdmin(admin.ModelAdmin):
+    list_display = ('user', 'quest', 'saved_at')
+    search_fields = ('user__email', 'quest__title')
+    list_filter = ('saved_at',)

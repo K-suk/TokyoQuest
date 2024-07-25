@@ -6,8 +6,8 @@ from rest_framework.permissions import IsAuthenticated
 from django.utils import timezone
 from django.shortcuts import get_object_or_404
 from accounts.models import User
-from .models import Quest, QuestCompletion, Report, Tag, Ticket, TicketIssuance, Review, TravelPlan
-from .serializers import QuestSerializer, QuestCompletionSerializer, ReportSerializer, TicketSerializer, TicketIssuanceSerializer, ReviewSerializer, TravelPlanSerializer
+from .models import Quest, QuestCompletion, Report, SavedQuest, Tag, Ticket, TicketIssuance, Review, TravelPlan
+from .serializers import QuestSerializer, QuestCompletionSerializer, ReportSerializer, SavedQuestSerializer, TicketSerializer, TicketIssuanceSerializer, ReviewSerializer, TravelPlanSerializer
 from apscheduler.schedulers.background import BackgroundScheduler
 import logging
 from rest_framework import status
@@ -271,3 +271,47 @@ def get_user_travel_plan(request):
         return Response(serializer.data, status=status.HTTP_200_OK)
     else:
         return Response({'detail': 'No travel plan found for this user.'}, status=status.HTTP_404_NOT_FOUND)
+    
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+@parser_classes([MultiPartParser, FormParser])
+@transaction.atomic
+def save_quest(request, quest_id):
+    user = request.user
+    quest = get_object_or_404(Quest, id=quest_id)
+    
+    if SavedQuest.objects.filter(user=user, quest=quest).exists():
+        print("Quest already completed")
+        return Response({'status': 'quest already completed'}, status=status.HTTP_200_OK)
+    
+    try:
+        save_quest = SavedQuest.objects.create(user=user, quest=quest)
+        return Response({'status': 'quest saved'}, status=status.HTTP_200_OK)
+    except Exception as e:
+        print(f"Error completing quest: {e}")
+        return Response({'status': 'error', 'detail': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+    
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def is_quest_saved(request, quest_id):
+    user = request.user
+    quest = get_object_or_404(Quest, id=quest_id)
+    
+    is_saved = SavedQuest.objects.filter(user=user, quest=quest).exists()
+    return Response({'is_saved': is_saved}, status=status.HTTP_200_OK)
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_saved_quests(request):
+    user = request.user
+    saved_quests = SavedQuest.objects.filter(user=user)
+    serializer = SavedQuestSerializer(saved_quests, many=True)
+    return Response(serializer.data, status=status.HTTP_200_OK)
+
+# @api_view(['GET'])
+# @permission_classes([IsAuthenticated])
+# def get_completed_quests(request):
+#     user = request.user
+#     completed_quests = QuestCompletion.objects.filter(user=user)
+#     serializer = QuestCompletionSerializer(completed_quests, many=True)
+#     return Response(serializer.data)
