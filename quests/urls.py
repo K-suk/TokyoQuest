@@ -3,10 +3,10 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from .views import (
-    QuestViewSet, get_user_travel_plan, report_view, quest_detail, complete_quest, 
+    QuestViewSet, generate_report, get_user_travel_plan, report_view, quest_detail, complete_quest, 
     TicketViewSet, save_quest, is_quest_saved, get_saved_quests, search_quests_by_tag, 
     use_ticket, claim_ticket, add_review, get_incomplete_quests, get_ticket_issuances, 
-    get_reviews, get_completed_quests, create_travel_plan
+    get_reviews, get_completed_quests, create_travel_plan, get_reports
 )
 
 router = DefaultRouter()
@@ -33,4 +33,6 @@ urlpatterns = [
     path('completed-quests/', get_completed_quests, name='completed-quests'),
     path('travel-plans/create_plan/', create_travel_plan, name='create_travel_plan'),
     path('travel-plans/', get_user_travel_plan, name='get_user_travel_plan'),
+    path('generate_report/', generate_report, name='generate_report'),
+    path('reports/', get_reports, name='get_reports'),
 ]

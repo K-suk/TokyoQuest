@@ -188,7 +188,6 @@ def report_view(request):
         print(f"Request {request_id} - Report not found for user {request.user.id}")  # デバッグ情報
         return Response({'detail': 'Report not found.'}, status=status.HTTP_404_NOT_FOUND)
 
-
 def handle():
     now = timezone.now()
     users = User.objects.filter(due__lt=now, done=False)
@@ -201,12 +200,28 @@ def handle():
         Report.objects.create(user=user, content=report_content)
 
 def generate_report_content(user):
+    if Report.objects.filter(user=user).exists():
+        return None  # 既にレポートが存在する場合、新しいレポートを生成しない
+
     completed_quests = QuestCompletion.objects.filter(user=user)
     report_content = f'Report for {user.first_name} {user.last_name}:\n\n'
     report_content += f'Completed Quests:\n'
     for completion in completed_quests:
         report_content += f'- {completion.quest.title} (Completed on {completion.completion_date})\n'
     return report_content
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def generate_report(request):
+    user = request.user
+    report_content = generate_report_content(user)
+    if report_content is None:
+        return Response({'status': 'Report already exists'}, status=status.HTTP_200_OK)
+    user.done = True
+    user.save()
+    report = Report.objects.create(user=user, content=report_content)
+    serializer = ReportSerializer(report)
+    return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 def start():
     scheduler = BackgroundScheduler()
@@ -233,7 +248,7 @@ def create_travel_plan(request):
     elif area.lower() == 'tokyo':
         quests = Quest.objects.filter(Q(tags__name='Ginza') | Q(tags__name='Akasaka') | Q(tags__name='Azabu') | Q(tags__name='Tokyo') | Q(tags__name='Tsukiji') | Q(tags__name='Kagurazaka'))
     elif area.lower() == 'odaiba':
-        quests = Quest.objects.filter(Q(tags__name='Tsukishima') | Q(tags__name='Kasai') | Q(tags__name='Toyosu') | Q(tags__name='Odaiba') | Q(tags__name='Roppongi'))
+        quests = Quest.objects.filter(Q(tags__name='Tsukishima') | Q(tags__name='Kasai') | Q(tags__name='Toyosu') | Q(tags__name='Odaiba') | Q(tags__name='Odaba') | Q(tags__name='Roppongi'))
 
     # 1日のプランを作成
     try:
@@ -308,10 +323,10 @@ def get_saved_quests(request):
     serializer = SavedQuestSerializer(saved_quests, many=True)
     return Response(serializer.data, status=status.HTTP_200_OK)
 
-# @api_view(['GET'])
-# @permission_classes([IsAuthenticated])
-# def get_completed_quests(request):
-#     user = request.user
-#     completed_quests = QuestCompletion.objects.filter(user=user)
-#     serializer = QuestCompletionSerializer(completed_quests, many=True)
-#     return Response(serializer.data)
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_reports(request):
+    user = request.user
+    reports = Report.objects.filter(user=user)
+    serializer = ReportSerializer(reports, many=True)
+    return Response(serializer.data, status=status.HTTP_200_OK)
