@@ -36,8 +36,8 @@ SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'your-default-secret-key')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = env('DEBUG')
 
-ALLOWED_HOSTS = env.list('ALLOWED_HOSTS')
-# ALLOWED_HOSTS = ['*']
+# ALLOWED_HOSTS = env.list('ALLOWED_HOSTS')
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -58,6 +58,7 @@ INSTALLED_APPS = [
     "rest_framework_simplejwt",
     "rest_framework_simplejwt.token_blacklist",
     "storages",  # 追加
+    "axes",
 ]
 
 REST_FRAMEWORK = {
@@ -102,6 +103,13 @@ SIMPLE_JWT = {
     'SLIDING_TOKEN_REFRESH_LIFETIME': timedelta(days=1),
 }
 
+AUTHENTICATION_BACKENDS = [
+    # AxesStandaloneBackendをAUTHENTICATION_BACKENDSのリストの先頭に記載する必要があります
+    'axes.backends.AxesStandaloneBackend',
+    # 今回はDjangoでデフォルトで設定されているModelBackendを認証で使用します
+    'django.contrib.auth.backends.ModelBackend',
+]
+
 MIDDLEWARE = [
     "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
@@ -114,6 +122,7 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     'tokyoquest.middleware.CheckUserDoneMiddleware',
     'django.middleware.common.CommonMiddleware',
+    'axes.middleware.AxesMiddleware',
 ]
 
 CORS_ALLOWED_ORIGINS = [
@@ -185,31 +194,31 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,
-    'handlers': {
-        'console': {
-            'class': 'logging.StreamHandler',
-        },
-        'file': {
-            'level': 'DEBUG',
-            'class': 'logging.FileHandler',
-            'filename': 'debug.log',
-        },
-    },
-    'loggers': {
-        'django': {
-            'handlers': ['console', 'file'],
-            'level': 'DEBUG',
-        },
-        'django.request': {
-            'handlers': ['console', 'file'],
-            'level': 'DEBUG',
-            'propagate': True,
-        },
-    },
-}
+# LOGGING = {
+#     'version': 1,
+#     'disable_existing_loggers': False,
+#     'handlers': {
+#         'console': {
+#             'class': 'logging.StreamHandler',
+#         },
+#         'file': {
+#             'level': 'DEBUG',
+#             'class': 'logging.FileHandler',
+#             'filename': 'debug.log',
+#         },
+#     },
+#     'loggers': {
+#         'django': {
+#             'handlers': ['console', 'file'],
+#             'level': 'DEBUG',
+#         },
+#         'django.request': {
+#             'handlers': ['console', 'file'],
+#             'level': 'DEBUG',
+#             'propagate': True,
+#         },
+#     },
+# }
 
 # Internationalization
 # https://docs.djangoproject.com/en/4.2/topics/i18n/
@@ -306,16 +315,30 @@ CORS_ALLOW_HEADERS = [
     'x-requested-with',
 ]
 
-# Google Cloud Storageの設定
-GOOGLE_APPLICATION_CREDENTIALS_JSON = os.getenv('GOOGLE_APPLICATION_CREDENTIALS_JSON')
-GS_CREDENTIALS = service_account.Credentials.from_service_account_info(
-    json.loads(GOOGLE_APPLICATION_CREDENTIALS_JSON)
-)
-GS_BUCKET_NAME = env('GS_BUCKET_NAME')
+# ロックされるまでのログイン回数
+AXES_FAILURE_LIMIT = 6
+# 自動でロックが解除されるまでの時間
+AXES_COOLOFF_TIME = 0.5
+# ロック対象をaccount_idで判断する
+AXES_LOCKOUT_PARAMETERS = ['username', 'ip_address', 'user_agent']
+# ログインに成功したら失敗回数をリセットされるようにする
+AXES_RESET_ON_SUCCESS = True
+# アクセスログをデータベースに書き込まないようにする
+AXES_DISABLE_ACCESS_LOG = True
+# ロックアウト中にログインに失敗した場合、クールオフ期間をリセットしないようにする
+AXES_RESET_COOL_OFF_ON_FAILURE_DURING_LOCKOUT = False
+AXES_USERNAME_CALLABLE = 'accounts.utils.signals.get_account_id'
 
-# Django Storagesの設定
-DEFAULT_FILE_STORAGE = 'storages.backends.gcloud.GoogleCloudStorage'
-STATICFILES_STORAGE = 'storages.backends.gcloud.GoogleCloudStorage'
+# # Google Cloud Storageの設定
+# GOOGLE_APPLICATION_CREDENTIALS_JSON = os.getenv('GOOGLE_APPLICATION_CREDENTIALS_JSON')
+# GS_CREDENTIALS = service_account.Credentials.from_service_account_info(
+#     json.loads(GOOGLE_APPLICATION_CREDENTIALS_JSON)
+# )
+# GS_BUCKET_NAME = env('GS_BUCKET_NAME')
 
-# メディアファイルのURL
-MEDIA_URL = f'https://storage.googleapis.com/{GS_BUCKET_NAME}/'
+# # Django Storagesの設定
+# DEFAULT_FILE_STORAGE = 'storages.backends.gcloud.GoogleCloudStorage'
+# STATICFILES_STORAGE = 'storages.backends.gcloud.GoogleCloudStorage'
+
+# # メディアファイルのURL
+# MEDIA_URL = f'https://storage.googleapis.com/{GS_BUCKET_NAME}/'
