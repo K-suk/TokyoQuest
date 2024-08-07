@@ -17,6 +17,7 @@ class Quest(models.Model):
     id = models.IntegerField(primary_key=True)
     title = models.CharField(max_length=200)
     description = models.TextField()
+    tips = models.TextField(null=True, blank=True)
     imgUrl = models.URLField(max_length=1500, null=True, blank=True)
     exampleUrl = models.URLField(max_length=1500, null=True, blank=True)
     location = models.CharField(max_length=1500)
