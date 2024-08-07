@@ -20,6 +20,8 @@ class Quest(models.Model):
     imgUrl = models.URLField(max_length=1500, null=True, blank=True)
     exampleUrl = models.URLField(max_length=1500, null=True, blank=True)
     location = models.CharField(max_length=1500)
+    latitude = models.FloatField(blank=True, null=True)
+    longitude = models.FloatField(blank=True, null=True)
     badget = models.CharField(max_length=1500, null=True, blank=True)
     date_created = models.DateTimeField(auto_now_add=True)
     tags = models.ManyToManyField(Tag, related_name='quests')
