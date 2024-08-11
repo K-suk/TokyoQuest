@@ -13,7 +13,11 @@ class QuestSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Quest
-        fields = ['id', 'title', 'description', 'location', 'badget', 'date_created', 'tags', 'imgUrl', 'exampleUrl']
+        fields = [
+            'id', 'title', 'description', 'tips', 'location', 'badget', 
+            'date_created', 'tags', 'imgUrl', 'exampleUrl', 
+            'latitude', 'longitude'  # latitudeとlongitudeを追加
+        ]
 
 class QuestCompletionSerializer(serializers.ModelSerializer):
     quest = QuestSerializer(read_only=True)

@@ -317,6 +317,13 @@ def is_quest_saved(request, quest_id):
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
+def is_quest_completed(request, quest_id):
+    user = request.user
+    is_completed = QuestCompletion.objects.filter(user=user, quest_id=quest_id).exists()
+    return Response({'is_completed': is_completed}, status=status.HTTP_200_OK)
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
 def get_saved_quests(request):
     user = request.user
     saved_quests = SavedQuest.objects.filter(user=user)
