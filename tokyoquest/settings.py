@@ -57,7 +57,7 @@ INSTALLED_APPS = [
     "corsheaders",
     "rest_framework_simplejwt",
     "rest_framework_simplejwt.token_blacklist",
-    "storages",  # 追加
+    "storages",
     "axes",
 ]
 
@@ -104,9 +104,7 @@ SIMPLE_JWT = {
 }
 
 AUTHENTICATION_BACKENDS = [
-    # AxesStandaloneBackendをAUTHENTICATION_BACKENDSのリストの先頭に記載する必要があります
     'axes.backends.AxesStandaloneBackend',
-    # 今回はDjangoでデフォルトで設定されているModelBackendを認証で使用します
     'django.contrib.auth.backends.ModelBackend',
 ]
 
@@ -151,22 +149,6 @@ TEMPLATES = [
 WSGI_APPLICATION = "tokyoquest.wsgi.application"
 
 
-# Database
-# https://docs.djangoproject.com/en/4.2/ref/settings/#databases
-
-# default_dburl = "sqlite:///" + str(BASE_DIR / "db.sqlite3")
-# 
-# DATABASES = {
-#     "default": {
-#         "ENGINE": "django.db.backends.sqlite3",
-#         "NAME": BASE_DIR / "db.sqlite3",
-#     }
-# }
-
-# DATABASES = {
-#     "default": config("DATABASE_URL", default=default_dburl, cast=dburl),
-# }
-# データベース設定
 DATABASES = {
     'default': dj_database_url.config(
         default=env('DATABASE_URL')
@@ -315,30 +297,21 @@ CORS_ALLOW_HEADERS = [
     'x-requested-with',
 ]
 
-# ロックされるまでのログイン回数
 AXES_FAILURE_LIMIT = 6
-# 自動でロックが解除されるまでの時間
 AXES_COOLOFF_TIME = 0.5
-# ロック対象をaccount_idで判断する
 AXES_LOCKOUT_PARAMETERS = ['username', 'ip_address', 'user_agent']
-# ログインに成功したら失敗回数をリセットされるようにする
 AXES_RESET_ON_SUCCESS = True
-# アクセスログをデータベースに書き込まないようにする
 AXES_DISABLE_ACCESS_LOG = True
-# ロックアウト中にログインに失敗した場合、クールオフ期間をリセットしないようにする
 AXES_RESET_COOL_OFF_ON_FAILURE_DURING_LOCKOUT = False
 AXES_USERNAME_CALLABLE = 'accounts.utils.signals.get_account_id'
 
-# # Google Cloud Storageの設定
-# GOOGLE_APPLICATION_CREDENTIALS_JSON = os.getenv('GOOGLE_APPLICATION_CREDENTIALS_JSON')
-# GS_CREDENTIALS = service_account.Credentials.from_service_account_info(
-#     json.loads(GOOGLE_APPLICATION_CREDENTIALS_JSON)
-# )
-# GS_BUCKET_NAME = env('GS_BUCKET_NAME')
+GOOGLE_APPLICATION_CREDENTIALS_JSON = os.getenv('GOOGLE_APPLICATION_CREDENTIALS_JSON')
+GS_CREDENTIALS = service_account.Credentials.from_service_account_info(
+    json.loads(GOOGLE_APPLICATION_CREDENTIALS_JSON)
+)
+GS_BUCKET_NAME = env('GS_BUCKET_NAME')
 
-# # Django Storagesの設定
-# DEFAULT_FILE_STORAGE = 'storages.backends.gcloud.GoogleCloudStorage'
-# STATICFILES_STORAGE = 'storages.backends.gcloud.GoogleCloudStorage'
+DEFAULT_FILE_STORAGE = 'storages.backends.gcloud.GoogleCloudStorage'
+STATICFILES_STORAGE = 'storages.backends.gcloud.GoogleCloudStorage'
 
-# # メディアファイルのURL
-# MEDIA_URL = f'https://storage.googleapis.com/{GS_BUCKET_NAME}/'
+MEDIA_URL = f'https://storage.googleapis.com/{GS_BUCKET_NAME}/'
