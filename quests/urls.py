@@ -4,7 +4,7 @@ from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from .views import (
     QuestViewSet, generate_report, get_user_travel_plan, is_quest_completed, report_view, quest_detail, complete_quest, 
-    TicketViewSet, save_quest, is_quest_saved, get_saved_quests, search_quests_by_tag, 
+    TicketViewSet, save_quest, is_quest_saved, get_saved_quests, search_quests_by_tag, search_quests_by_tags, 
     use_ticket, claim_ticket, add_review, get_incomplete_quests, get_ticket_issuances, 
     get_reviews, get_completed_quests, create_travel_plan, get_reports
 )
@@ -19,6 +19,7 @@ urlpatterns = [
     path('quests/reports/', report_view, name='report_view'),
     path('quests/incomplete/', get_incomplete_quests, name='get_incomplete_quests'),
     path('quests/search/', search_quests_by_tag, name='search_quests_by_tag'),
+    path('quests/search_tags/', search_quests_by_tags, name='search_quests_by_tags'),
     path('quests/saved/', get_saved_quests, name='get_saved_quests'),
     path('', include(router.urls)),
     path('quests/<int:pk>/', quest_detail, name='quest_detail'),

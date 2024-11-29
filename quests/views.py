@@ -7,7 +7,7 @@ from django.utils import timezone
 from django.shortcuts import get_object_or_404
 from accounts.models import User
 from .models import Quest, QuestCompletion, Report, SavedQuest, Tag, Ticket, TicketIssuance, Review, TravelPlan
-from .serializers import QuestSerializer, QuestCompletionSerializer, ReportSerializer, SavedQuestSerializer, TicketSerializer, TicketIssuanceSerializer, ReviewSerializer, TravelPlanSerializer
+from .serializers import QuestListSerializer, QuestDetailSerializer, QuestCompletionSerializer, ReportSerializer, SavedQuestSerializer, TicketSerializer, TicketIssuanceSerializer, ReviewSerializer, TravelPlanSerializer
 from apscheduler.schedulers.background import BackgroundScheduler
 import logging
 from rest_framework import status
@@ -20,24 +20,102 @@ from django.db.models import Q
 logger = logging.getLogger(__name__)
 
 class QuestViewSet(viewsets.ModelViewSet):
-    queryset = Quest.objects.all()
-    serializer_class = QuestSerializer
+    queryset = Quest.objects.prefetch_related('tags').all()
+    def get_serializer_class(self):
+        if self.action in ['list']:
+            return QuestListSerializer
+        return QuestDetailSerializer
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def search_quests_by_tags(request):
+    tag_names = request.query_params.get('tags')  # クエリパラメータを取得
+    limit = request.query_params.get('limit')
+
+    logger.info(f"Received tags: {tag_names}")  # デバッグ用
+    logger.info(f"Received limit: {limit}")  # デバッグ用
+
+    if not tag_names:
+        logger.error("Tags not provided")
+        return Response({'error': 'Tags not provided'}, status=400)
+
+    try:
+        tag_list = tag_names.split(',')  # タグ名をリストに変換
+        logger.info(f"Parsed tags: {tag_list}")  # デバッグ用
+
+        queryset = Quest.objects.filter(tags__name__in=tag_list).distinct()
+
+        if limit:
+            try:
+                queryset = queryset[:int(limit)]
+            except ValueError:
+                logger.error("Invalid limit value")
+                return Response({'error': 'Invalid limit value'}, status=400)
+
+        serializer = QuestListSerializer(queryset, many=True)  # 軽量シリアライザーを使用
+        return Response(serializer.data)
+    except Exception as e:
+        logger.error(f"Error processing tags: {e}")
+        return Response({'error': 'Error processing tags'}, status=500)
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_all_tags(request):
+    """
+    すべてのタグを取得します。
+    """
+    try:
+        tags = Tag.objects.all()
+        tag_list = [tag.name for tag in tags]
+        logger.info(f"Retrieved {len(tag_list)} tags")
+        return Response(tag_list)
+    except Exception as e:
+        logger.error(f"Error fetching tags: {e}")
+        return Response({'error': 'Error retrieving tags'}, status=500)
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def get_incomplete_quests(request):
+    """
+    ユーザーがまだ完了していないクエストを取得します。
+    """
     logger.debug("get_incomplete_quests called")
     user = request.user
-    completed_quests = QuestCompletion.objects.filter(user=user).values_list('quest_id', flat=True)
-    incomplete_quests = Quest.objects.exclude(id__in=completed_quests)
-    serializer = QuestSerializer(incomplete_quests, many=True)
+
+    try:
+        # 完了したクエストのIDリストを取得
+        completed_quests = QuestCompletion.objects.filter(user=user).values_list('quest_id', flat=True)
+
+        # 未完了クエストを取得
+        incomplete_quests = Quest.objects.exclude(id__in=completed_quests).only('id', 'title', 'imgUrl')
+        serializer = QuestListSerializer(incomplete_quests, many=True)
+        logger.info(f"User {user.id} has {len(serializer.data)} incomplete quests")
+        return Response(serializer.data)
+    except Exception as e:
+        logger.error(f"Error fetching incomplete quests: {e}")
+        return Response({'error': 'Error retrieving incomplete quests'}, status=500)
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def search_quests_by_tag(request):
+    tag_name = request.query_params.get('tag')
+    if not tag_name:
+        logger.error("Tag not provided")
+        return Response({'error': 'Tag not provided'}, status=400)
+    
+    logger.info(f"Received search request for tag: {tag_name}")
+    
+    quests = Quest.objects.filter(tags__name=tag_name).only('id', 'title', 'imgUrl').prefetch_related('tags')
+    
+    serializer = QuestListSerializer(quests, many=True)
+    logger.info(f"Found quests: {len(quests)}")
     return Response(serializer.data)
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def quest_detail(request, pk):
     quest = get_object_or_404(Quest, pk=pk)
-    serializer = QuestSerializer(quest)
+    serializer = QuestDetailSerializer(quest)
     return Response(serializer.data)
 
 @api_view(['GET'])
@@ -152,22 +230,9 @@ def add_review(request, quest_id):
 @permission_classes([IsAuthenticated])
 def get_reviews(request, quest_id):
     quest = get_object_or_404(Quest, id=quest_id)
-    reviews = quest.reviews.all()
+    reviews = Review.objects.filter(quest=quest)
     serializer = ReviewSerializer(reviews, many=True)
     return Response(serializer.data)
-
-@api_view(['GET'])
-@permission_classes([IsAuthenticated])
-def search_quests_by_tag(request):
-    tag_name = request.query_params.get('tag')
-    logger.info(f"Received search request for tag: {tag_name}")
-    if tag_name:
-        quests = Quest.objects.filter(tags__name=tag_name)
-        serializer = QuestSerializer(quests, many=True)
-        logger.info(f"Found quests: {serializer.data}")
-        return Response(serializer.data)
-    logger.error("Tag not provided")
-    return Response({'error': 'Tag not provided'}, status=400)
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])

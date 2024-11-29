@@ -8,7 +8,14 @@ class TagSerializer(serializers.ModelSerializer):
         model = Tag
         fields = ['id', 'name']
 
-class QuestSerializer(serializers.ModelSerializer):
+class QuestListSerializer(serializers.ModelSerializer):
+    tags = TagSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Quest
+        fields = ['id', 'title', 'imgUrl', 'tags']  # 必要最小限のフィールド
+
+class QuestDetailSerializer(serializers.ModelSerializer):
     tags = TagSerializer(many=True, read_only=True)
 
     class Meta:
@@ -20,21 +27,21 @@ class QuestSerializer(serializers.ModelSerializer):
         ]
 
 class QuestCompletionSerializer(serializers.ModelSerializer):
-    quest = QuestSerializer(read_only=True)
+    quest = QuestDetailSerializer(read_only=True)
 
     class Meta:
         model = QuestCompletion
         fields = ['id', 'user', 'quest', 'completion_date', 'media']
 
 class SavedQuestSerializer(serializers.ModelSerializer):
-    quest = QuestSerializer(read_only=True)
+    quest = QuestDetailSerializer(read_only=True)
     
     class Meta:
         model = SavedQuest
         fields = '__all__'
         
 class TravelPlanSerializer(serializers.ModelSerializer):
-    quests = QuestSerializer(many=True)
+    quests = QuestDetailSerializer(many=True)
 
     class Meta:
         model = TravelPlan
