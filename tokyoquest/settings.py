@@ -281,6 +281,8 @@ X_FRAME_OPTIONS = 'DENY'
 SECURE_SSL_REDIRECT = True
 SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True
+CSRF_COOKIE_SAMESITE = 'Lax'
+CSRF_TRUSTED_ORIGINS = ['https://tokyoquest.onrender.com', 'http://localhost:3000']
 
 # Content Security Policy（CSP）の設定
 SECURE_CONTENT_TYPE_NOSNIFF = True
