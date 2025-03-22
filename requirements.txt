@@ -40,3 +40,4 @@ google-cloud-storage
 django-axes
 dj-rest-auth
 django-allauth
+drf-social-oauth2
