@@ -35,7 +35,7 @@ class TravelPlanAdmin(admin.ModelAdmin):
 @admin.register(Review)
 class ReviewAdmin(admin.ModelAdmin):
     list_display = ('quest', 'user', 'rating', 'created_at')
-    search_fields = ('quest__title', 'user__account_id', 'rating')
+    # search_fields = ('quest__title', 'user__account_id', 'rating')
     list_filter = ('rating', 'created_at')
     
 # @admin.register(Report)
