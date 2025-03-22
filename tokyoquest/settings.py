@@ -287,7 +287,8 @@ SECURE_CONTENT_TYPE_NOSNIFF = True
 SECURE_BROWSER_XSS_FILTER = True
 X_FRAME_OPTIONS = 'DENY'
 
-SUPERUSER_ACCOUNT_ID = env("SUPERUSER_ACCOUNT_ID")
+SUPERUSER_FIRST_NAME = env("SUPERUSER_FIRST_NAME")
+SUPERUSER_LAST_NAME = env("SUPERUSER_LAST_NAME")
 SUPERUSER_EMAIL = env("SUPERUSER_EMAIL")
 SUPERUSER_PASSWORD = env("SUPERUSER_PASSWORD")
 
@@ -300,16 +301,16 @@ CSP_IMG_SRC = ("'self'", "data:")
 CSP_CONNECT_SRC = ("'self'", "https://tokyoquest.onrender.com", "https://tokyo-quest-front.vercel.app")
 CSP_FONT_SRC = ("'self'", "https://cdnjs.cloudflare.com")
 
-GOOGLE_APPLICATION_CREDENTIALS_JSON = env('GOOGLE_APPLICATION_CREDENTIALS_JSON')
-GS_CREDENTIALS = service_account.Credentials.from_service_account_info(
-    json.loads(GOOGLE_APPLICATION_CREDENTIALS_JSON)
-)
-GS_BUCKET_NAME = env('GS_BUCKET_NAME')
+# GOOGLE_APPLICATION_CREDENTIALS_JSON = env('GOOGLE_APPLICATION_CREDENTIALS_JSON')
+# GS_CREDENTIALS = service_account.Credentials.from_service_account_info(
+#     json.loads(GOOGLE_APPLICATION_CREDENTIALS_JSON)
+# )
+# GS_BUCKET_NAME = env('GS_BUCKET_NAME')
 
-DEFAULT_FILE_STORAGE = 'storages.backends.gcloud.GoogleCloudStorage'
-STATICFILES_STORAGE = 'storages.backends.gcloud.GoogleCloudStorage'
+# DEFAULT_FILE_STORAGE = 'storages.backends.gcloud.GoogleCloudStorage'
+# STATICFILES_STORAGE = 'storages.backends.gcloud.GoogleCloudStorage'
 
-MEDIA_URL = f'https://storage.googleapis.com/{GS_BUCKET_NAME}/'
+# MEDIA_URL = f'https://storage.googleapis.com/{GS_BUCKET_NAME}/'
 
 # allauthの設定
 SITE_ID = 1  # `django.contrib.sites` を使うために必要
