@@ -1,7 +1,7 @@
 from rest_framework import serializers
 
 from accounts.serializers import UserSerializer
-from .models import Quest, QuestCompletion, Report, SavedQuest, Tag, Ticket, TicketIssuance, Review, TravelPlan
+from .models import Quest, QuestCompletion, SavedQuest, Tag, Review, TravelPlan
 
 class TagSerializer(serializers.ModelSerializer):
     class Meta:
@@ -47,27 +47,6 @@ class TravelPlanSerializer(serializers.ModelSerializer):
         model = TravelPlan
         fields = '__all__'
 
-class ReportSerializer(serializers.ModelSerializer):
-    user = UserSerializer(read_only=True)
-
-    class Meta:
-        model = Report
-        fields = ['id', 'user', 'report_date', 'content']
-
-class TicketIssuanceSerializer(serializers.ModelSerializer):
-    user = UserSerializer()
-
-    class Meta:
-        model = TicketIssuance
-        fields = ['id', 'user', 'issue_date', 'used']
-
-class TicketSerializer(serializers.ModelSerializer):
-    issued_to = UserSerializer(many=True)
-
-    class Meta:
-        model = Ticket
-        fields = ['id', 'title', 'description', 'level', 'link', 'issued_to']
-
 class ReviewSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)
     quest = serializers.PrimaryKeyRelatedField(read_only=True)
@@ -75,3 +54,25 @@ class ReviewSerializer(serializers.ModelSerializer):
     class Meta:
         model = Review
         fields = ['id', 'user', 'quest', 'rating', 'comment', 'created_at']
+        
+# 一旦いらないやつ
+# class ReportSerializer(serializers.ModelSerializer):
+#     user = UserSerializer(read_only=True)
+
+#     class Meta:
+#         model = Report
+#         fields = ['id', 'user', 'report_date', 'content']
+
+# class TicketIssuanceSerializer(serializers.ModelSerializer):
+#     user = UserSerializer()
+
+#     class Meta:
+#         model = TicketIssuance
+#         fields = ['id', 'user', 'issue_date', 'used']
+
+# class TicketSerializer(serializers.ModelSerializer):
+#     issued_to = UserSerializer(many=True)
+
+#     class Meta:
+#         model = Ticket
+#         fields = ['id', 'title', 'description', 'level', 'link', 'issued_to']

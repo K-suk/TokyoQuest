@@ -66,21 +66,6 @@ class TravelPlan(models.Model):
     def __str__(self):
         return f"{self.user.first_name}'s Travel Plan"
     
-class Ticket(models.Model):
-    id = models.IntegerField(primary_key=True)
-    title = models.CharField(max_length=100)
-    description = models.TextField()
-    level = models.IntegerField(blank=True, null=True)
-    link = models.CharField(max_length=100)
-    issued_to = models.ManyToManyField(settings.AUTH_USER_MODEL, through='TicketIssuance', related_name='tickets')
-
-class TicketIssuance(models.Model):
-    id = models.IntegerField(primary_key=True)
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    ticket = models.ForeignKey(Ticket, on_delete=models.CASCADE)
-    issue_date = models.DateTimeField(auto_now_add=True)
-    used = models.BooleanField(default=False)
-    
 class Review(models.Model):
     quest = models.ForeignKey(Quest, on_delete=models.CASCADE, related_name='reviews')
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
@@ -88,7 +73,22 @@ class Review(models.Model):
     comment = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
     
-class Report(models.Model):
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    report_date = models.DateTimeField(auto_now_add=True)
-    content = models.TextField()
+# class Ticket(models.Model):
+#     id = models.IntegerField(primary_key=True)
+#     title = models.CharField(max_length=100)
+#     description = models.TextField()
+#     level = models.IntegerField(blank=True, null=True)
+#     link = models.CharField(max_length=100)
+#     issued_to = models.ManyToManyField(settings.AUTH_USER_MODEL, through='TicketIssuance', related_name='tickets')
+
+# class TicketIssuance(models.Model):
+#     id = models.IntegerField(primary_key=True)
+#     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+#     ticket = models.ForeignKey(Ticket, on_delete=models.CASCADE)
+#     issue_date = models.DateTimeField(auto_now_add=True)
+#     used = models.BooleanField(default=False)
+
+# class Report(models.Model):
+#     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+#     report_date = models.DateTimeField(auto_now_add=True)
+#     content = models.TextField()

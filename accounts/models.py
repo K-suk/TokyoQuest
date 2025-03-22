@@ -1,110 +1,101 @@
+import uuid
 from django.db import models
-from django.contrib.auth.models import (BaseUserManager,
-                                        AbstractBaseUser,
-                                        PermissionsMixin)
+from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin, BaseUserManager
 from django.utils.translation import gettext_lazy as _
 
-
 class UserManager(BaseUserManager):
-    def _create_user(self, email, account_id, password, **extra_fields):
+    def _create_user(self, email, first_name, last_name, password, **extra_fields):
+        if not email:
+            raise ValueError("The Email field must be set")
         email = self.normalize_email(email)
-        user = self.model(email=email, account_id=account_id, **extra_fields)
+        user = self.model(email=email, first_name=first_name, last_name=last_name, **extra_fields)
         user.set_password(password)
         user.save(using=self._db)
 
         return user
 
-    def create_user(self, email, account_id, password=None, **extra_fields):
+    def create_user(self, email, first_name, last_name, password=None, **extra_fields):
         extra_fields.setdefault('is_active', True)
         extra_fields.setdefault('is_staff', False)
         extra_fields.setdefault('is_superuser', False)
         return self._create_user(
             email=email,
-            account_id=account_id,
+            first_name=first_name,
+            last_name=last_name,
             password=password,
             **extra_fields,
         )
 
-    def create_superuser(self, email, account_id, password, **extra_fields):
-        extra_fields['is_active'] = True
-        extra_fields['is_staff'] = True
-        extra_fields['is_superuser'] = True
+    def create_superuser(self, email, first_name, last_name, password, **extra_fields):
+        extra_fields.setdefault('is_active', True)
+        extra_fields.setdefault('is_staff', True)
+        extra_fields.setdefault('is_superuser', True)
+
+        if extra_fields.get('is_staff') is not True:
+            raise ValueError("Superuser must have is_staff=True.")
+        if extra_fields.get('is_superuser') is not True:
+            raise ValueError("Superuser must have is_superuser=True.")
+
         return self._create_user(
             email=email,
-            account_id=account_id,
+            first_name=first_name,
+            last_name=last_name,
             password=password,
             **extra_fields,
         )
 
-
 class User(AbstractBaseUser, PermissionsMixin):
-
-    account_id = models.CharField(
-        verbose_name=_("account_id"),
+    user_id = models.CharField(
+        max_length=255,
+        default=uuid.uuid4,
+        primary_key=True,
         unique=True,
-        max_length=10
+        editable=False
     )
     email = models.EmailField(
         verbose_name=_("email"),
         unique=True
     )
     first_name = models.CharField(
-        verbose_name=_("first_name"),
+        verbose_name=_("first name"),
         max_length=150,
         null=True,
         blank=False
     )
     last_name = models.CharField(
-        verbose_name=_("last_name"),
+        verbose_name=_("last name"),
         max_length=150,
         null=True,
         blank=False
     )
-    contact_address = models.CharField(
-        verbose_name=("contact_address"),
-        max_length=150,
-        null=True,
-        blank=False
+    created_at = models.DateTimeField(
+        verbose_name=_("created at"),
+        auto_now_add=True
+    )
+    updated_at = models.DateTimeField(
+        verbose_name=_("updated at"),
+        auto_now=True
     )
     level = models.IntegerField(
         verbose_name=("level"),
         blank=True,
         null=True
     )
-    done = models.BooleanField(
-        verbose_name=('done'),
-        default=False
-    )
-    due = models.DateField(
-        verbose_name=("due"),
+    contact_address = models.CharField(
+        verbose_name=("contact_address"),
+        max_length=150,
+        null=True,
         blank=True,
-        null=True
-    )
-    is_superuser = models.BooleanField(
-        verbose_name=_("is_superuer"),
-        default=False
-    )
-    is_staff = models.BooleanField(
-        verbose_name=_('staff status'),
-        default=False,
-    )
-    is_active = models.BooleanField(
-        verbose_name=_('active'),
-        default=True,
-    )
-    created_at = models.DateTimeField(
-        verbose_name=_("created_at"),
-        auto_now_add=True
-    )
-    updated_at = models.DateTimeField(
-        verbose_name=_("updateded_at"),
-        auto_now=True
-    )
+    ) 
+
+    # Django 管理者用
+    is_staff = models.BooleanField(default=False)
+    is_active = models.BooleanField(default=True)
 
     objects = UserManager()
 
-    USERNAME_FIELD = 'account_id' # ログイン時、ユーザー名の代わりにaccount_idを使用
-    REQUIRED_FIELDS = ['email']  # スーパーユーザー作成時にemailも設定する
+    USERNAME_FIELD = "email"  # Googleログインなので email を識別子に
+    REQUIRED_FIELDS = ["first_name", "last_name"]
 
     def __str__(self):
-        return self.account_id
+        return self.email

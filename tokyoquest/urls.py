@@ -23,6 +23,8 @@ urlpatterns = [
     path('miasanmia_admin_url/', admin.site.urls),
     path('api/', include('quests.urls')),
     path('api/accounts/', include('accounts.urls')),
+    path('api/auth/', include('drf_social_oauth2.urls', namespace='drf')),
+    path('accounts/', include('allauth.urls')),
 ]
 
 if settings.DEBUG:

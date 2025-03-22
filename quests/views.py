@@ -6,8 +6,8 @@ from rest_framework.permissions import IsAuthenticated
 from django.utils import timezone
 from django.shortcuts import get_object_or_404
 from accounts.models import User
-from .models import Quest, QuestCompletion, Report, SavedQuest, Tag, Ticket, TicketIssuance, Review, TravelPlan
-from .serializers import QuestListSerializer, QuestDetailSerializer, QuestCompletionSerializer, ReportSerializer, SavedQuestSerializer, TicketSerializer, TicketIssuanceSerializer, ReviewSerializer, TravelPlanSerializer
+from .models import Quest, QuestCompletion, SavedQuest, Tag, Review, TravelPlan
+from .serializers import QuestListSerializer, QuestDetailSerializer, QuestCompletionSerializer, SavedQuestSerializer, ReviewSerializer, TravelPlanSerializer
 from apscheduler.schedulers.background import BackgroundScheduler
 import logging
 from rest_framework import status
@@ -26,22 +26,58 @@ class QuestViewSet(viewsets.ModelViewSet):
             return QuestListSerializer
         return QuestDetailSerializer
 
+# get all incompleted quests, avoiding having too much data in database instead of a little bit of increase in response time...(still pretty tiny tho)
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_incomplete_quests(request):
+    user = request.user
+    try:
+        completed_quests = set(QuestCompletion.objects.filter(user=user).values_list('quest_id', flat=True))
+        incomplete_quests = Quest.objects.exclude(id__in=completed_quests).only('id', 'title', 'imgUrl')
+        serializer = QuestListSerializer(incomplete_quests, many=True)
+        return Response(serializer.data)
+    except Exception as e:
+        logger.error(f"Error fetching incomplete quests: {e}")
+        return Response({'error': 'Error retrieving incomplete quests'}, status=500)
+
+# get all completed quests
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_completed_quests(request):
+    user = request.user
+    completed_quests = QuestCompletion.objects.filter(user=user)
+    serializer = QuestCompletionSerializer(completed_quests, many=True)
+    return Response(serializer.data)
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_all_tags(request):
+    try:
+        tags = Tag.objects.all()
+        tag_list = [tag.name for tag in tags]
+        logger.info(f"Retrieved {len(tag_list)} tags")
+        return Response(tag_list)
+    except Exception as e:
+        logger.error(f"Error fetching tags: {e}")
+        return Response({'error': 'Error retrieving tags'}, status=500)
+    
+# to search quest ここのシステム修正するかも
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def search_quests_by_tags(request):
-    tag_names = request.query_params.get('tags')  # クエリパラメータを取得
+    tag_names = request.query_params.get('tags')
     limit = request.query_params.get('limit')
 
-    logger.info(f"Received tags: {tag_names}")  # デバッグ用
-    logger.info(f"Received limit: {limit}")  # デバッグ用
+    logger.info(f"Received tags: {tag_names}")
+    logger.info(f"Received limit: {limit}")
 
     if not tag_names:
         logger.error("Tags not provided")
         return Response({'error': 'Tags not provided'}, status=400)
 
     try:
-        tag_list = tag_names.split(',')  # タグ名をリストに変換
-        logger.info(f"Parsed tags: {tag_list}")  # デバッグ用
+        tag_list = tag_names.split(',')
+        logger.info(f"Parsed tags: {tag_list}")
 
         queryset = Quest.objects.filter(tags__name__in=tag_list).distinct()
 
@@ -52,48 +88,11 @@ def search_quests_by_tags(request):
                 logger.error("Invalid limit value")
                 return Response({'error': 'Invalid limit value'}, status=400)
 
-        serializer = QuestListSerializer(queryset, many=True)  # 軽量シリアライザーを使用
+        serializer = QuestListSerializer(queryset, many=True)
         return Response(serializer.data)
     except Exception as e:
         logger.error(f"Error processing tags: {e}")
         return Response({'error': 'Error processing tags'}, status=500)
-
-@api_view(['GET'])
-@permission_classes([IsAuthenticated])
-def get_all_tags(request):
-    """
-    すべてのタグを取得します。
-    """
-    try:
-        tags = Tag.objects.all()
-        tag_list = [tag.name for tag in tags]
-        logger.info(f"Retrieved {len(tag_list)} tags")
-        return Response(tag_list)
-    except Exception as e:
-        logger.error(f"Error fetching tags: {e}")
-        return Response({'error': 'Error retrieving tags'}, status=500)
-
-@api_view(['GET'])
-@permission_classes([IsAuthenticated])
-def get_incomplete_quests(request):
-    """
-    ユーザーがまだ完了していないクエストを取得します。
-    """
-    logger.debug("get_incomplete_quests called")
-    user = request.user
-
-    try:
-        # 完了したクエストのIDリストを取得
-        completed_quests = QuestCompletion.objects.filter(user=user).values_list('quest_id', flat=True)
-
-        # 未完了クエストを取得
-        incomplete_quests = Quest.objects.exclude(id__in=completed_quests).only('id', 'title', 'imgUrl')
-        serializer = QuestListSerializer(incomplete_quests, many=True)
-        logger.info(f"User {user.id} has {len(serializer.data)} incomplete quests")
-        return Response(serializer.data)
-    except Exception as e:
-        logger.error(f"Error fetching incomplete quests: {e}")
-        return Response({'error': 'Error retrieving incomplete quests'}, status=500)
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
@@ -116,14 +115,6 @@ def search_quests_by_tag(request):
 def quest_detail(request, pk):
     quest = get_object_or_404(Quest, pk=pk)
     serializer = QuestDetailSerializer(quest)
-    return Response(serializer.data)
-
-@api_view(['GET'])
-@permission_classes([IsAuthenticated])
-def get_completed_quests(request):
-    user = request.user
-    completed_quests = QuestCompletion.objects.filter(user=user)
-    serializer = QuestCompletionSerializer(completed_quests, many=True)
     return Response(serializer.data)
 
 @api_view(['POST'])
@@ -159,63 +150,6 @@ def complete_quest(request, quest_id):
         print(f"Error completing quest: {e}")
         return Response({'status': 'error', 'detail': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
-class TicketViewSet(viewsets.ModelViewSet):
-    queryset = Ticket.objects.all()
-    serializer_class = TicketSerializer
-    permission_classes = [IsAuthenticated]
-
-@api_view(['POST'])
-@permission_classes([IsAuthenticated])
-@transaction.atomic
-def use_ticket(request, issuance_id):
-    ticket_issuance = get_object_or_404(TicketIssuance, id=issuance_id)
-    
-    # 既に使用されているかをチェック
-    if ticket_issuance.used:
-        logger.info("Ticket already used")
-        return Response({'status': 'ticket already used'}, status=status.HTTP_200_OK)
-    
-    # チケット使用処理
-    try:
-        ticket_issuance.used = True
-        ticket_issuance.save()
-        logger.info("Ticket used successfully")
-        return Response({'status': 'ticket used'}, status=status.HTTP_200_OK)
-    except Exception as e:
-        logger.error(f"Error using ticket: {e}")
-        return Response({'status': 'error', 'detail': str(e)}, status=status.HTTP_400_BAD_REQUEST)
-
-@api_view(['POST'])
-@permission_classes([IsAuthenticated])
-@transaction.atomic
-def claim_ticket(request, ticket_id):
-    user = request.user
-    ticket = get_object_or_404(Ticket, id=ticket_id)
-    
-    # 既にチケットが請求されているかをチェック
-    if TicketIssuance.objects.filter(user=user, ticket=ticket).exists():
-        logger.info("Ticket already claimed")
-        return Response({'status': 'ticket already claimed'}, status=status.HTTP_200_OK)
-    
-    # チケット請求処理
-    try:
-        ticket_issuance = TicketIssuance.objects.create(user=request.user, ticket=ticket)
-        ticket.issued_to.add(user)
-        ticket.save()
-        logger.info("Ticket claimed successfully")
-        return Response({'status': 'ticket claimed'}, status=status.HTTP_200_OK)
-    except Exception as e:
-        logger.error(f"Error claiming ticket: {e}")
-        return Response({'status': 'error', 'detail': str(e)}, status=status.HTTP_400_BAD_REQUEST)
-
-@api_view(['GET'])
-@permission_classes([IsAuthenticated])
-def get_ticket_issuances(request, ticket_id):
-    ticket = get_object_or_404(Ticket, id=ticket_id)
-    issuances = TicketIssuance.objects.filter(ticket=ticket)
-    serializer = TicketIssuanceSerializer(issuances, many=True)
-    return Response(serializer.data)
-
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def add_review(request, quest_id):
@@ -234,65 +168,7 @@ def get_reviews(request, quest_id):
     serializer = ReviewSerializer(reviews, many=True)
     return Response(serializer.data)
 
-@api_view(['GET'])
-@permission_classes([IsAuthenticated])
-def report_view(request):
-    request_id = uuid.uuid4()
-    print(f"Request {request_id} - Report View accessed")  # デバッグ情報
-    print(f"Request {request_id} - User {request.user.id} done flag: {request.user.done}")  # ユーザーのdoneフラグをログに出力
-    try:
-        if request.user.done:
-            print(f"Request {request_id} - User {request.user.id} has done flag set to True")  # デバッグ情報
-            report = Report.objects.get(user=request.user)
-            serializer = ReportSerializer(report)
-            return Response(serializer.data, status=status.HTTP_200_OK)
-        else:
-            print(f"Request {request_id} - User {request.user.id} does not have permission")  # デバッグ情報
-            return Response({'detail': 'You do not have permission to view this resource.'}, status=status.HTTP_403_FORBIDDEN)
-    except Report.DoesNotExist:
-        print(f"Request {request_id} - Report not found for user {request.user.id}")  # デバッグ情報
-        return Response({'detail': 'Report not found.'}, status=status.HTTP_404_NOT_FOUND)
-
-def handle():
-    now = timezone.now()
-    users = User.objects.filter(due__lt=now, done=False)
-
-    for user in users:
-        user.done = True
-        user.save()
-
-        report_content = generate_report_content(user)
-        Report.objects.create(user=user, content=report_content)
-
-def generate_report_content(user):
-    if Report.objects.filter(user=user).exists():
-        return None  # 既にレポートが存在する場合、新しいレポートを生成しない
-
-    completed_quests = QuestCompletion.objects.filter(user=user)
-    report_content = f'Report for {user.first_name} {user.last_name}:\n\n'
-    report_content += f'Completed Quests:\n'
-    for completion in completed_quests:
-        report_content += f'- {completion.quest.title} (Completed on {completion.completion_date})\n'
-    return report_content
-
-@api_view(['POST'])
-@permission_classes([IsAuthenticated])
-def generate_report(request):
-    user = request.user
-    report_content = generate_report_content(user)
-    if report_content is None:
-        return Response({'status': 'Report already exists'}, status=status.HTTP_200_OK)
-    user.done = True
-    user.save()
-    report = Report.objects.create(user=user, content=report_content)
-    serializer = ReportSerializer(report)
-    return Response(serializer.data, status=status.HTTP_201_CREATED)
-
-def start():
-    scheduler = BackgroundScheduler()
-    scheduler.add_job(handle, 'interval', days=1)  # 1日に1回ジョブを実行するようにスケジュール
-    scheduler.start()
-    
+# ここのアルゴリズムは絶対に修正しよう。
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def create_travel_plan(request):
@@ -395,10 +271,127 @@ def get_saved_quests(request):
     serializer = SavedQuestSerializer(saved_quests, many=True)
     return Response(serializer.data, status=status.HTTP_200_OK)
 
-@api_view(['GET'])
-@permission_classes([IsAuthenticated])
-def get_reports(request):
-    user = request.user
-    reports = Report.objects.filter(user=user)
-    serializer = ReportSerializer(reports, many=True)
-    return Response(serializer.data, status=status.HTTP_200_OK)
+#一旦不要なやつ
+# class TicketViewSet(viewsets.ModelViewSet):
+#     queryset = Ticket.objects.all()
+#     serializer_class = TicketSerializer
+#     permission_classes = [IsAuthenticated]
+
+# @api_view(['POST'])
+# @permission_classes([IsAuthenticated])
+# @transaction.atomic
+# def use_ticket(request, issuance_id):
+#     ticket_issuance = get_object_or_404(TicketIssuance, id=issuance_id)
+    
+#     # 既に使用されているかをチェック
+#     if ticket_issuance.used:
+#         logger.info("Ticket already used")
+#         return Response({'status': 'ticket already used'}, status=status.HTTP_200_OK)
+    
+#     # チケット使用処理
+#     try:
+#         ticket_issuance.used = True
+#         ticket_issuance.save()
+#         logger.info("Ticket used successfully")
+#         return Response({'status': 'ticket used'}, status=status.HTTP_200_OK)
+#     except Exception as e:
+#         logger.error(f"Error using ticket: {e}")
+#         return Response({'status': 'error', 'detail': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+# @api_view(['POST'])
+# @permission_classes([IsAuthenticated])
+# @transaction.atomic
+# def claim_ticket(request, ticket_id):
+#     user = request.user
+#     ticket = get_object_or_404(Ticket, id=ticket_id)
+    
+#     # 既にチケットが請求されているかをチェック
+#     if TicketIssuance.objects.filter(user=user, ticket=ticket).exists():
+#         logger.info("Ticket already claimed")
+#         return Response({'status': 'ticket already claimed'}, status=status.HTTP_200_OK)
+    
+#     # チケット請求処理
+#     try:
+#         ticket_issuance = TicketIssuance.objects.create(user=request.user, ticket=ticket)
+#         ticket.issued_to.add(user)
+#         ticket.save()
+#         logger.info("Ticket claimed successfully")
+#         return Response({'status': 'ticket claimed'}, status=status.HTTP_200_OK)
+#     except Exception as e:
+#         logger.error(f"Error claiming ticket: {e}")
+#         return Response({'status': 'error', 'detail': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+# @api_view(['GET'])
+# @permission_classes([IsAuthenticated])
+# def get_ticket_issuances(request, ticket_id):
+#     ticket = get_object_or_404(Ticket, id=ticket_id)
+#     issuances = TicketIssuance.objects.filter(ticket=ticket)
+#     serializer = TicketIssuanceSerializer(issuances, many=True)
+#     return Response(serializer.data)
+
+# @api_view(['GET'])
+# @permission_classes([IsAuthenticated])
+# def get_reports(request):
+#     user = request.user
+#     reports = Report.objects.filter(user=user)
+#     serializer = ReportSerializer(reports, many=True)
+#     return Response(serializer.data, status=status.HTTP_200_OK)
+
+# @api_view(['POST'])
+# @permission_classes([IsAuthenticated])
+# def generate_report(request):
+#     user = request.user
+#     report_content = generate_report_content(user)
+#     if report_content is None:
+#         return Response({'status': 'Report already exists'}, status=status.HTTP_200_OK)
+#     user.done = True
+#     user.save()
+#     report = Report.objects.create(user=user, content=report_content)
+#     serializer = ReportSerializer(report)
+#     return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+# def start():
+#     scheduler = BackgroundScheduler()
+#     scheduler.add_job(handle, 'interval', days=1)  # 1日に1回ジョブを実行するようにスケジュール
+#     scheduler.start()
+
+# @api_view(['GET'])
+# @permission_classes([IsAuthenticated])
+# def report_view(request):
+#     request_id = uuid.uuid4()
+#     print(f"Request {request_id} - Report View accessed")  # デバッグ情報
+#     print(f"Request {request_id} - User {request.user.id} done flag: {request.user.done}")  # ユーザーのdoneフラグをログに出力
+#     try:
+#         if request.user.done:
+#             print(f"Request {request_id} - User {request.user.id} has done flag set to True")  # デバッグ情報
+#             report = Report.objects.get(user=request.user)
+#             serializer = ReportSerializer(report)
+#             return Response(serializer.data, status=status.HTTP_200_OK)
+#         else:
+#             print(f"Request {request_id} - User {request.user.id} does not have permission")  # デバッグ情報
+#             return Response({'detail': 'You do not have permission to view this resource.'}, status=status.HTTP_403_FORBIDDEN)
+#     except Report.DoesNotExist:
+#         print(f"Request {request_id} - Report not found for user {request.user.id}")  # デバッグ情報
+#         return Response({'detail': 'Report not found.'}, status=status.HTTP_404_NOT_FOUND)
+
+# def handle():
+#     now = timezone.now()
+#     users = User.objects.filter(due__lt=now, done=False)
+
+#     for user in users:
+#         user.done = True
+#         user.save()
+
+#         report_content = generate_report_content(user)
+#         Report.objects.create(user=user, content=report_content)
+
+# def generate_report_content(user):
+#     if Report.objects.filter(user=user).exists():
+#         return None  # 既にレポートが存在する場合、新しいレポートを生成しない
+
+#     completed_quests = QuestCompletion.objects.filter(user=user)
+#     report_content = f'Report for {user.first_name} {user.last_name}:\n\n'
+#     report_content += f'Completed Quests:\n'
+#     for completion in completed_quests:
+#         report_content += f'- {completion.quest.title} (Completed on {completion.completion_date})\n'
+#     return report_content
