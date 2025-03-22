@@ -10,7 +10,7 @@ class Command(BaseCommand):
         if not User.objects.filter(account_id=settings.SUPERUSER_EMAIL).exists():
             User.objects.create_superuser(
                 first_name = settings.SUPERUSER_FIRST_NAME,
-                first_name = settings.SUPERUSER_LAST_NAME,
+                last_name = settings.SUPERUSER_LAST_NAME,
                 email=settings.SUPERUSER_EMAIL,
                 password=settings.SUPERUSER_PASSWORD
             )
