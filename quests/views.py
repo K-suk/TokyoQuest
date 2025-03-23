@@ -181,7 +181,6 @@ def create_travel_plan(request):
     if existing_plan:
         existing_plan.delete()
     
-    # エリアに基づいてクエストをフィルタリング
     if area.lower() == 'shibuya':
         quests = Quest.objects.filter(Q(tags__name='Shibuya') | Q(tags__name='Harajuku') | Q(tags__name='Shinjuku') | Q(tags__name='Yoyogi') | Q(tags__name='Ebisu'))
     elif area.lower() == 'asakusa':
@@ -191,9 +190,7 @@ def create_travel_plan(request):
     elif area.lower() == 'odaiba':
         quests = Quest.objects.filter(Q(tags__name='Tsukishima') | Q(tags__name='Kasai') | Q(tags__name='Toyosu') | Q(tags__name='Odaiba') | Q(tags__name='Odaba') | Q(tags__name='Roppongi'))
 
-    # 1日のプランを作成
     try:
-        # タグを使ってフィルタリング
         morning_quests = random.sample(list(quests.filter(Q(tags__name='Culture') | Q(tags__name='Amusement') | Q(tags__name='Art') | Q(tags__name='Architecture') | Q(tags__name='Local Experience') | Q(tags__name='Shrine') | Q(tags__name='Shopping') | Q(tags__name='Photo Spot') | Q(tags__name='Anime'))), min(2, quests.filter(Q(tags__name='Culture') | Q(tags__name='Amusement') | Q(tags__name='Art') | Q(tags__name='Architecture') | Q(tags__name='Local Experience') | Q(tags__name='Shrine') | Q(tags__name='Shopping') | Q(tags__name='Photo Spot') | Q(tags__name='Anime')).count()))
         lunch_quests = random.sample(list(quests.filter(tags__name='Food')), min(1, quests.filter(tags__name='Food').count()))
         afternoon_quests = random.sample(list(quests.filter(Q(tags__name='Culture') | Q(tags__name='Amusement') | Q(tags__name='Art') | Q(tags__name='Architecture') | Q(tags__name='Local Experience') | Q(tags__name='Shrine') | Q(tags__name='Shopping') | Q(tags__name='Photo Spot') | Q(tags__name='Anime'))), min(3, quests.filter(Q(tags__name='Culture') | Q(tags__name='Amusement') | Q(tags__name='Art') | Q(tags__name='Architecture') | Q(tags__name='Local Experience') | Q(tags__name='Shrine') | Q(tags__name='Shopping') | Q(tags__name='Photo Spot') | Q(tags__name='Anime')).count()))
@@ -203,10 +200,8 @@ def create_travel_plan(request):
         night_quests = random.sample(list(quests.filter(tags__name='Scenery')), min(1, quests.filter(tags__name='Scenery').count()))
         drink_quests = random.sample(list(quests.filter(Q(tags__name='Bar') | Q(tags__name='Izakaya'))), min(1, quests.filter(Q(tags__name='Bar') | Q(tags__name='Izakaya')).count()))
         
-        # 全てのクエストをまとめる
         all_quests = morning_quests + lunch_quests + afternoon_quests + break_quests + evening_quests + dinner_quests + night_quests + drink_quests
 
-        # トラベルプランを作成
         travel_plan = TravelPlan.objects.create(user=user)
         travel_plan.quests.set(all_quests)
         travel_plan.save()

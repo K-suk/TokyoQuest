@@ -13,7 +13,7 @@ class QuestListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Quest
-        fields = ['id', 'title', 'imgUrl', 'tags']  # 必要最小限のフィールド
+        fields = ['id', 'title', 'imgUrl', 'tags']
 
 class QuestDetailSerializer(serializers.ModelSerializer):
     tags = TagSerializer(many=True, read_only=True)
@@ -23,7 +23,7 @@ class QuestDetailSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'title', 'description', 'tips', 'location', 'badget', 
             'date_created', 'tags', 'imgUrl', 'exampleUrl', 
-            'latitude', 'longitude'  # latitudeとlongitudeを追加
+            'latitude', 'longitude'
         ]
 
 class QuestCompletionSerializer(serializers.ModelSerializer):

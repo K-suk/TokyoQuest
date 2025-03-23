@@ -73,16 +73,6 @@ INSTALLED_APPS = [
     "oauth2_provider",
 ]
 
-
-# REST_FRAMEWORK = {
-#     "DEFAULT_AUTHENTICATION_CLASSES": [
-#         "rest_framework_simplejwt.authentication.JWTAuthentication",
-#     ],
-#     'DEFAULT_PERMISSION_CLASSES': [
-#         'rest_framework.permissions.IsAuthenticated',
-#     ],
-# }
-
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
         'rest_framework.authentication.BasicAuthentication',
@@ -106,13 +96,10 @@ SIMPLE_JWT = {
 }
 
 AUTHENTICATION_BACKENDS = (
-    # Google OAuth2 の認証バックエンド
     'social_core.backends.google.GoogleOAuth2',
 
-    # Django REST framework の認証バックエンド
     'drf_social_oauth2.backends.DjangoOAuth2',
 
-    # Django の認証バックエンド
     'django.contrib.auth.backends.ModelBackend',
     'allauth.account.auth_backends.AuthenticationBackend'
 )
@@ -314,19 +301,18 @@ CSP_IMG_SRC = ("'self'", "data:")
 CSP_CONNECT_SRC = ("'self'", "https://tokyoquest.onrender.com", "https://tokyo-quest-front.vercel.app")
 CSP_FONT_SRC = ("'self'", "https://cdnjs.cloudflare.com")
 
-# GOOGLE_APPLICATION_CREDENTIALS_JSON = env('GOOGLE_APPLICATION_CREDENTIALS_JSON')
-# GS_CREDENTIALS = service_account.Credentials.from_service_account_info(
-#     json.loads(GOOGLE_APPLICATION_CREDENTIALS_JSON)
-# )
-# GS_BUCKET_NAME = env('GS_BUCKET_NAME')
+GOOGLE_APPLICATION_CREDENTIALS_JSON = env('GOOGLE_APPLICATION_CREDENTIALS_JSON')
+GS_CREDENTIALS = service_account.Credentials.from_service_account_info(
+    json.loads(GOOGLE_APPLICATION_CREDENTIALS_JSON)
+)
+GS_BUCKET_NAME = env('GS_BUCKET_NAME')
 
-# DEFAULT_FILE_STORAGE = 'storages.backends.gcloud.GoogleCloudStorage'
-# STATICFILES_STORAGE = 'storages.backends.gcloud.GoogleCloudStorage'
+DEFAULT_FILE_STORAGE = 'storages.backends.gcloud.GoogleCloudStorage'
+STATICFILES_STORAGE = 'storages.backends.gcloud.GoogleCloudStorage'
 
-# MEDIA_URL = f'https://storage.googleapis.com/{GS_BUCKET_NAME}/'
+MEDIA_URL = f'https://storage.googleapis.com/{GS_BUCKET_NAME}/'
 
-# allauthの設定
-SITE_ID = 1  # `django.contrib.sites` を使うために必要
+SITE_ID = 1
 ACCOUNT_AUTHENTICATION_METHOD = "email"
 ACCOUNT_USER_MODEL_USERNAME_FIELD = None
 ACCOUNT_EMAIL_REQUIRED = True
@@ -334,7 +320,6 @@ ACCOUNT_USERNAME_REQUIRED = False
 ACCOUNT_EMAIL_VERIFICATION = "none"
 ACCOUNT_UNIQUE_EMAIL = True
 
-# `dj-rest-auth` の設定
 REST_USE_JWT = True
 REST_AUTH_SERIALIZERS = {
     "USER_DETAILS_SERIALIZER": "accounts.serializers.UserSerializer",
@@ -347,8 +332,6 @@ SOCIAL_AUTH_GOOGLE_OAUTH2_SCOPE = [
     'https://www.googleapis.com/auth/userinfo.email',
     'https://www.googleapis.com/auth/userinfo.profile',
 ]
-
-# Google OAuthの設定
 
 SOCIALACCOUNT_PROVIDERS = {
     "google": {

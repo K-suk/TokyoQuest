@@ -25,12 +25,3 @@ class UserUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ('first_name', 'last_name', 'contact_address')
-        
-class CustomSocialLoginSerializer(SocialLoginSerializer):
-    def validate(self, attrs):
-        # まずは通常のバリデーション処理を行う
-        data = super().validate(attrs)
-        # バリデーション後にエラーがあればログ出力する（ここではエラーが発生しなければ出力されない）
-        if self.errors:
-            logger.error("SocialLogin validation errors: %s", self.errors)
-        return data

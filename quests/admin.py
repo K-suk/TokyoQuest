@@ -26,8 +26,8 @@ class QuestCompletionAdmin(admin.ModelAdmin):
 class TravelPlanAdmin(admin.ModelAdmin):
     list_display = ('user', 'date_created')
     search_fields = ('user__username',)
-    filter_horizontal = ('quests',)  # quests の管理に多対多フィールド用のウィジェットを使用
-
+    filter_horizontal = ('quests',)
+    
     def get_queryset(self, request):
         qs = super().get_queryset(request)
         return qs.select_related('user').prefetch_related('quests')
@@ -50,7 +50,6 @@ class SavedQuestAdmin(admin.ModelAdmin):
     search_fields = ('user__email', 'quest__title')
     list_filter = ('saved_at',)
 
-# 一旦いらないやつ
 # @admin.register(Ticket)
 # class TicketAdmin(admin.ModelAdmin):
 #     list_display = ('id', 'title', 'description', 'link', 'level', 'issued_to_users')

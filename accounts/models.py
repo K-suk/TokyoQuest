@@ -79,7 +79,8 @@ class User(AbstractBaseUser, PermissionsMixin):
     level = models.IntegerField(
         verbose_name=("level"),
         blank=True,
-        null=True
+        null=True,
+        default=0
     )
     contact_address = models.CharField(
         verbose_name=("contact_address"),
@@ -88,13 +89,12 @@ class User(AbstractBaseUser, PermissionsMixin):
         blank=True,
     ) 
 
-    # Django 管理者用
     is_staff = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
 
     objects = UserManager()
 
-    USERNAME_FIELD = "email"  # Googleログインなので email を識別子に
+    USERNAME_FIELD = "email"
     REQUIRED_FIELDS = ["first_name", "last_name"]
 
     def __str__(self):
